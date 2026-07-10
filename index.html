@@ -5,78 +5,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#061817">
   <title>Padel Matchmaker</title>
-  <style>
-    :root{--bg:#061817;--card:#0f302d;--dark:#082522;--light:#123b37;--green:#47f0b6;--blue:#53a8ff;--red:#ff6b6b;--orange:#ffb84d;--text:#f5fffb;--muted:#9fc7bd;--line:rgba(255,255,255,.13)}
-    *{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#123b37,var(--bg));color:var(--text);padding-bottom:calc(84px + env(safe-area-inset-bottom))}
-    header{position:sticky;top:0;z-index:20;padding:14px 12px 12px;padding-top:calc(14px + env(safe-area-inset-top));text-align:center;background:rgba(6,24,23,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-    h1{margin:0;color:var(--green);font-size:24px}h2{margin:0 0 12px;font-size:22px}main{width:min(100%,920px);margin:auto;padding:12px;display:grid;gap:14px}
-    .panel,.card{background:rgba(15,48,45,.97);border:1px solid var(--line);border-radius:20px;padding:16px}.hidden{display:none!important}.sub,.muted{color:var(--muted);font-size:14px;line-height:1.45}.notice{padding:14px;border-radius:16px;color:#d7ecff;background:rgba(83,168,255,.12);border:1px solid rgba(83,168,255,.4);line-height:1.45}
-    button,input{font:inherit}button{width:100%;min-height:50px;margin-top:9px;padding:14px 18px;border:0;border-radius:999px;cursor:pointer;background:var(--green);color:#06201d;font-size:16px;font-weight:900;touch-action:manipulation}button.secondary{color:var(--text);background:var(--light);border:1px solid var(--line)}button.blue{color:#04131f;background:var(--blue)}button.red{color:#fff;background:var(--red)}button.orange{color:#231500;background:var(--orange)}button:disabled{opacity:.45}
-    input{width:100%;min-height:50px;margin-bottom:9px;padding:13px 14px;color:var(--text);background:#061f1d;border:1px solid var(--line);border-radius:14px;font-size:16px}input:focus{outline:3px solid rgba(71,240,182,.25);border-color:var(--green)}
-    .dashboard{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.stat{padding:14px 8px;text-align:center;background:var(--dark);border:1px solid var(--line);border-radius:18px}.stat strong{display:block;color:var(--green);font-size:26px;margin-bottom:4px}
-    .status-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.status-box{padding:11px 2px;text-align:center;background:var(--dark);border:1px solid var(--line);border-radius:13px;font-size:13px;font-weight:900}.done{color:var(--green);background:rgba(71,240,182,.14);border-color:var(--green)}.missing{color:var(--red);background:rgba(255,107,107,.11);border-color:var(--red)}
-    .selection-summary{position:sticky;top:76px;z-index:10;padding:12px;margin-bottom:12px;background:rgba(8,37,34,.97);border:1px solid var(--line);border-radius:16px}.selection-summary strong{color:var(--green);font-size:19px}
-    .player-card,.leader-card{display:grid;grid-template-columns:42px minmax(0,1fr) 86px;gap:10px;align-items:center;padding:12px;margin-bottom:9px;background:var(--dark);border:1px solid var(--line);border-radius:18px}.player-card{cursor:pointer}.player-card.selected{background:rgba(71,240,182,.12);border-color:var(--green)}.check{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid var(--muted);border-radius:50%;font-weight:900}.selected .check{color:#06201d;background:var(--green);border-color:var(--green)}
-    .name{overflow-wrap:anywhere;font-size:16px;font-weight:900}.points{color:var(--green);font-size:19px;font-weight:900;text-align:right}.place{color:var(--green);font-size:20px;font-weight:900;text-align:center}.score-line{margin-top:4px;color:var(--green);font-size:13px;font-weight:800}.score-badge{display:inline-block;padding:4px 8px;margin-top:5px;color:#05221d;background:var(--green);border-radius:999px;font-size:12px;font-weight:900}
-    .court-card{padding:16px;margin-bottom:14px;background:var(--dark);border:1px solid rgba(71,240,182,.35);border-radius:22px}.court-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.court-title{color:var(--green);font-size:20px;font-weight:900}.court-state{padding:5px 9px;color:var(--muted);background:rgba(255,255,255,.07);border-radius:999px;font-size:12px;font-weight:800}.court-state.saved{color:var(--green);border:1px solid rgba(71,240,182,.45)}
-    .team{padding:14px;margin-bottom:10px;background:rgba(255,255,255,.07);border:1px solid transparent;border-radius:16px}.team.winner{background:rgba(71,240,182,.11);border-color:var(--green)}.team-player{display:flex;justify-content:space-between;gap:12px;padding:3px 0}.team-player-score{color:var(--green);font-size:13px;font-weight:800;white-space:nowrap}.rank-info{margin-top:6px;color:var(--muted);font-size:13px}.vs{margin:8px 0;color:var(--muted);text-align:center;font-weight:900}
-    .score-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:13px}.score-field label{display:block;margin-bottom:5px;color:var(--muted);font-size:13px;font-weight:800}.score-field input{margin:0;text-align:center;font-size:24px;font-weight:900}.saved-result{margin-top:12px;padding:12px;color:var(--green);background:rgba(71,240,182,.1);border:1px solid rgba(71,240,182,.35);border-radius:14px;text-align:center;font-size:18px;font-weight:900}
-    .round-selector{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}.round-selector button{width:auto;min-width:92px;min-height:42px;margin:0;padding:10px 14px;white-space:nowrap;font-size:14px}.round-selector button.inactive{color:var(--text);background:var(--light);border:1px solid var(--line)}
-    .tabs{position:fixed;right:0;bottom:0;left:0;z-index:30;display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom);background:rgba(6,24,23,.98);border-top:1px solid var(--line)}.tab{padding:9px 2px;color:var(--muted);text-align:center;font-size:11px;cursor:pointer}.tab strong{display:block;margin-bottom:2px;font-size:21px}.tab.active{color:var(--green)}.danger-zone{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
-    @media(min-width:760px){.matches-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.court-card{margin-bottom:0}}@media(max-width:520px){main{padding:10px}h1{font-size:22px}.panel,.card{padding:14px;border-radius:18px}.player-card,.leader-card{grid-template-columns:38px minmax(0,1fr) 74px;gap:8px;padding:11px 9px}.score-grid{gap:8px}.team-player{display:block}.team-player-score{display:block;margin-top:3px}}
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header><h1>Padel Matchmaker</h1><div class="sub" id="topStatus">Bruttotrup · rangliste · kampe</div></header>
+<header>
+  <h1>Padel Matchmaker</h1>
+  <div class="sub" id="topStatus">Bruttotrup · rangliste · kampe</div>
+</header>
+
 <main>
-<section id="homeView">
-  <div class="panel"><h2>Dashboard</h2><div class="dashboard"><div class="stat"><strong id="statSquad">0</strong>Bruttotrup</div><div class="stat"><strong id="statTonight">0/20</strong>I aften</div><div class="stat"><strong id="statRound">0/4</strong>Runde</div><div class="stat"><strong id="statResults">0/5</strong>Resultater</div></div></div>
-  <div class="panel"><div class="notice" id="homeNotice">Opret eller vælg spillere fra bruttotruppen.</div><button onclick="showView('squadView')">👥 Vælg aftenens spillere</button><button class="blue" onclick="generateNextRound()">🎾 Lav næste runde</button><button class="secondary" onclick="showView('matchesView')">Se kampe</button><button class="secondary" onclick="showView('leaderView')">Se leaderboard</button></div>
-  <div class="panel"><h2>Banestatus</h2><div class="status-grid" id="roundStatus"></div></div>
-</section>
-<section id="squadView" class="hidden"><div class="panel"><h2>Bruttotrup</h2><p class="sub">Søg, opret og vælg præcis 20 spillere. Ranglistepoint og kampresultater gemmes permanent på denne enhed.</p><input id="searchPlayer" type="search" placeholder="Søg efter spiller..." oninput="renderSquad()"><input id="newPlayerName" type="text" placeholder="Navn på ny spiller"><button onclick="addPlayer()">➕ Opret ny spiller med 500 point</button><div class="selection-summary"><strong id="selectedCount">Valgt: 0 / 20</strong><div class="sub">Tryk på en spiller for at tilmelde eller afmelde.</div></div><div id="squadList"></div><button onclick="confirmTonightPlayers()">Gem aftenens 20 spillere</button></div></section>
-<section id="matchesView" class="hidden"><div class="panel"><h2 id="matchTitle">Kampe</h2><div class="round-selector" id="roundSelector"></div><div class="status-grid" id="matchStatus"></div></div><div class="matches-grid" id="matches"></div></section>
-<section id="leaderView" class="hidden"><div class="panel"><h2>Aftenens leaderboard</h2><p class="sub">Ranglistepoint afgør placeringen. Ved pointlighed afgør flest kamp-point i aften.</p><div id="leaderboard"></div></div></section>
-<section id="adminView" class="hidden"><div class="panel"><h2>Admin</h2><button onclick="seedExampleSquad()">Indsæt test-bruttotrup</button><button class="secondary" onclick="exportData()">Eksportér sikkerhedskopi</button><button class="secondary" onclick="importData()">Importér sikkerhedskopi</button><div class="danger-zone"><button class="orange" onclick="resetTonight()">Nulstil aftenens turnering</button><button class="red" onclick="resetEverything()">Slet ALT</button></div></div></section>
+  <section id="homeView">
+    <div class="panel">
+      <h2>Dashboard</h2>
+      <div class="dashboard">
+        <div class="stat"><strong id="statSquad">0</strong>Bruttotrup</div>
+        <div class="stat"><strong id="statTonight">0/20</strong>I aften</div>
+        <div class="stat"><strong id="statRound">0/4</strong>Runde</div>
+        <div class="stat"><strong id="statResults">0/5</strong>Resultater</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="notice" id="homeNotice">Opret eller vælg spillere fra bruttotruppen.</div>
+      <button onclick="showView('squadView')">👥 Vælg aftenens spillere</button>
+      <button class="blue" onclick="generateNextRound()">🎾 Lav næste runde</button>
+      <button class="secondary" onclick="showView('matchesView')">Se kampe</button>
+      <button class="secondary" onclick="showView('leaderView')">Se leaderboard</button>
+    </div>
+
+    <div class="panel">
+      <h2>Banestatus</h2>
+      <div class="status-grid" id="roundStatus"></div>
+    </div>
+  </section>
+
+  <section id="squadView" class="hidden">
+    <div class="panel">
+      <h2>Bruttotrup</h2>
+      <p class="sub">Søg, opret og vælg præcis 20 spillere. Ranglistepoint og kampresultater gemmes permanent på denne enhed.</p>
+      <input id="searchPlayer" type="search" placeholder="Søg efter spiller..." oninput="renderSquad()">
+      <input id="newPlayerName" type="text" placeholder="Navn på ny spiller">
+      <button onclick="addPlayer()">➕ Opret ny spiller med 500 point</button>
+      <div class="selection-summary">
+        <strong id="selectedCount">Valgt: 0 / 20</strong>
+        <div class="sub">Tryk på en spiller for at tilmelde eller afmelde.</div>
+      </div>
+      <div id="squadList"></div>
+      <button onclick="confirmTonightPlayers()">Gem aftenens 20 spillere</button>
+    </div>
+  </section>
+
+  <section id="matchesView" class="hidden">
+    <div class="panel">
+      <h2 id="matchTitle">Kampe</h2>
+      <div class="round-selector" id="roundSelector"></div>
+      <div class="status-grid" id="matchStatus"></div>
+    </div>
+    <div class="matches-grid" id="matches"></div>
+  </section>
+
+  <section id="leaderView" class="hidden">
+    <div class="panel">
+      <h2>Aftenens leaderboard</h2>
+      <p class="sub">Ranglistepoint afgør placeringen. Ved pointlighed afgør flest kamp-point i aften.</p>
+      <div id="leaderboard"></div>
+    </div>
+  </section>
+
+  <section id="adminView" class="hidden">
+    <div class="panel">
+      <h2>Admin</h2>
+      <button onclick="seedExampleSquad()">Indsæt test-bruttotrup</button>
+      <button class="secondary" onclick="exportData()">Eksportér sikkerhedskopi</button>
+      <button class="secondary" onclick="importData()">Importér sikkerhedskopi</button>
+      <div class="danger-zone">
+        <button class="orange" onclick="resetTonight()">Nulstil aftenens turnering</button>
+        <button class="red" onclick="resetEverything()">Slet ALT</button>
+      </div>
+    </div>
+  </section>
 </main>
-<nav class="tabs"><div class="tab active" id="tab-homeView" onclick="showView('homeView')"><strong>🏠</strong>Start</div><div class="tab" id="tab-squadView" onclick="showView('squadView')"><strong>👥</strong>Trup</div><div class="tab" id="tab-matchesView" onclick="showView('matchesView')"><strong>🎾</strong>Kampe</div><div class="tab" id="tab-leaderView" onclick="showView('leaderView')"><strong>🏆</strong>Rang</div><div class="tab" id="tab-adminView" onclick="showView('adminView')"><strong>⚙️</strong>Admin</div></nav>
-<script>
-const STORAGE_KEY='padelMatchmakerVersion5';let squad=[],tonightIds=[],tournamentId=null,currentRound=0,displayedRound=0,rounds=[];
-function uid(prefix='id'){return prefix+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,10)}
-function createPlayer(name){return{id:uid('player'),name,ratingPoints:500,games:0,wins:0,losses:0,matchPointsFor:0,matchPointsAgainst:0,results:[],createdAt:new Date().toISOString()}}
-function init(){loadState();migratePlayers();cleanInvalidReferences();updateUI()}
-function migratePlayers(){squad.forEach(p=>{if(typeof p.ratingPoints!=='number')p.ratingPoints=typeof p.points==='number'?p.points:500;if(typeof p.games!=='number')p.games=0;if(typeof p.wins!=='number')p.wins=0;if(typeof p.losses!=='number')p.losses=0;if(typeof p.matchPointsFor!=='number')p.matchPointsFor=0;if(typeof p.matchPointsAgainst!=='number')p.matchPointsAgainst=0;if(!Array.isArray(p.results))p.results=[]});saveState()}
-function cleanInvalidReferences(){const ids=new Set(squad.map(p=>p.id));tonightIds=tonightIds.filter(id=>ids.has(id));rounds.forEach(r=>r.matches=(r.matches||[]).filter(m=>[...m.teamA,...m.teamB].every(id=>ids.has(id))))}
-function addPlayer(){const input=document.getElementById('newPlayerName'),name=input.value.trim();if(!name){alert('Indtast spillerens navn.');return}if(squad.some(p=>p.name.toLowerCase()===name.toLowerCase())){alert('Spilleren findes allerede.');return}squad.push(createPlayer(name));input.value='';saveState();updateUI()}
-function toggleTonightPlayer(id){if(currentRound>0){alert('Turneringen er startet. Deltagerlisten kan ikke ændres.');return}if(tonightIds.includes(id))tonightIds=tonightIds.filter(x=>x!==id);else{if(tonightIds.length>=20){alert('Der kan højst vælges 20 spillere.');return}tonightIds.push(id)}saveState();updateUI()}
-function confirmTonightPlayers(){if(tonightIds.length!==20){alert('Der skal vælges præcis 20 spillere.');return}if(!tournamentId)tournamentId=uid('tournament');currentRound=0;displayedRound=0;rounds=[];saveState();updateUI();showView('homeView')}
-function getPlayer(id){return squad.find(p=>p.id===id)}function getTonightPlayers(){return tonightIds.map(getPlayer).filter(Boolean)}
-function getTonightResults(p){return tournamentId?p.results.filter(r=>r.tournamentId===tournamentId):[]}
-function getTonightStats(p){return getTonightResults(p).reduce((s,r)=>{s.games++;s.matchPointsFor+=r.scoreFor;s.matchPointsAgainst+=r.scoreAgainst;r.result==='W'?s.wins++:s.losses++;return s},{games:0,wins:0,losses:0,matchPointsFor:0,matchPointsAgainst:0})}
-function getLeaderboard(){return getTonightPlayers().sort((a,b)=>{const A=getTonightStats(a),B=getTonightStats(b);if(b.ratingPoints!==a.ratingPoints)return b.ratingPoints-a.ratingPoints;if(B.matchPointsFor!==A.matchPointsFor)return B.matchPointsFor-A.matchPointsFor;const ad=A.matchPointsFor-A.matchPointsAgainst,bd=B.matchPointsFor-B.matchPointsAgainst;if(bd!==ad)return bd-ad;if(B.wins!==A.wins)return B.wins-A.wins;return tonightIds.indexOf(a.id)-tonightIds.indexOf(b.id)})}
-function getCurrentRoundData(){return rounds.find(r=>r.roundNumber===currentRound)}function getDisplayedRoundData(){return rounds.find(r=>r.roundNumber===displayedRound)}
-function generateNextRound(){if(tonightIds.length!==20){alert('Vælg først præcis 20 spillere.');showView('squadView');return}if(!tournamentId)tournamentId=uid('tournament');if(currentRound>=4){alert('Alle fire runder er oprettet.');return}const prev=getCurrentRoundData();if(prev&&!allMatchesSaved(prev)){alert('Gem alle fem resultater først.');displayedRound=currentRound;showView('matchesView');return}const lb=getLeaderboard(),n=currentRound+1,matches=[];for(let c=0;c<5;c++){const b=c*4;matches.push({id:uid('match'),tournamentId,round:n,court:c+1,teamA:[lb[b].id,lb[b+2].id],teamB:[lb[b+1].id,lb[b+3].id],rankA:[b+1,b+3],rankB:[b+2,b+4],scoreA:null,scoreB:null,saved:false,applied:false})}rounds.push({roundNumber:n,createdAt:new Date().toISOString(),matches});currentRound=n;displayedRound=n;saveState();updateUI();showView('matchesView')}
-function saveMatch(id){const r=rounds.find(r=>r.matches.some(m=>m.id===id)),m=r&&r.matches.find(x=>x.id===id);if(!m||m.saved)return;const a=document.getElementById('scoreA-'+id).value.trim(),b=document.getElementById('scoreB-'+id).value.trim();if(a===''||b===''){alert('Indtast point for begge par.');return}const A=Number(a),B=Number(b);if(!Number.isInteger(A)||!Number.isInteger(B)||A<0||B<0){alert('Resultatet skal være hele, positive tal eller 0.');return}if(A===B){alert('Der skal være et vinderpar.');return}m.scoreA=A;m.scoreB=B;m.saved=true;applyMatchResult(m);saveState();updateUI();if(allMatchesSaved(r)){if(r.roundNumber<4){setTimeout(()=>{if(confirm('Alle resultater er gemt. Opret næste runde?'))generateNextRound()},150)}else setTimeout(()=>{alert('Alle fire runder er færdige.');showView('leaderView')},150)}}
-function applyMatchResult(m){if(m.applied)return;const a=m.scoreA,b=m.scoreB;applyResultToTeam(m,m.teamA,a,b,a>b);applyResultToTeam(m,m.teamB,b,a,b>a);m.applied=true}
-function applyResultToTeam(m,ids,forPts,againstPts,won){ids.forEach(id=>{const p=getPlayer(id);p.ratingPoints+=won?50:-50;p.games++;won?p.wins++:p.losses++;p.matchPointsFor+=forPts;p.matchPointsAgainst+=againstPts;p.results.push({id:uid('result'),matchId:m.id,tournamentId:m.tournamentId,date:new Date().toISOString(),round:m.round,court:m.court,result:won?'W':'L',scoreFor:forPts,scoreAgainst:againstPts,ratingChange:won?50:-50})})}
-function editMatch(id){const r=rounds.find(r=>r.matches.some(m=>m.id===id)),m=r&&r.matches.find(x=>x.id===id);if(!m||!m.saved)return;if(m.round<currentRound){alert('Resultatet er låst, fordi en senere runde er oprettet.');return}if(!confirm('Vil du rette resultatet?'))return;rollbackMatchResult(m);m.scoreA=null;m.scoreB=null;m.saved=false;m.applied=false;saveState();updateUI()}
-function rollbackMatchResult(m){if(!m.applied)return;[...m.teamA,...m.teamB].forEach(id=>{const p=getPlayer(id),res=p.results.find(x=>x.matchId===m.id);if(!res)return;p.ratingPoints-=res.ratingChange;p.games=Math.max(0,p.games-1);res.result==='W'?p.wins=Math.max(0,p.wins-1):p.losses=Math.max(0,p.losses-1);p.matchPointsFor=Math.max(0,p.matchPointsFor-res.scoreFor);p.matchPointsAgainst=Math.max(0,p.matchPointsAgainst-res.scoreAgainst);p.results=p.results.filter(x=>x.matchId!==m.id)});m.applied=false}
-function allMatchesSaved(r){return r&&r.matches.length===5&&r.matches.every(m=>m.saved)}
-function renderSquad(){const list=document.getElementById('squadList'),q=(document.getElementById('searchPlayer')?.value||'').trim().toLowerCase();list.innerHTML='';squad.slice().sort((a,b)=>a.name.localeCompare(b.name,'da',{sensitivity:'base'})).filter(p=>p.name.toLowerCase().includes(q)).forEach(p=>{const selected=tonightIds.includes(p.id),diff=p.matchPointsFor-p.matchPointsAgainst,el=document.createElement('div');el.className='player-card'+(selected?' selected':'');el.onclick=()=>toggleTonightPlayer(p.id);el.innerHTML=`<div class="check">${selected?'✓':''}</div><div><div class="name">${escapeHtml(p.name)}</div><div class="muted">${p.games} kampe · ${p.wins} sejre · ${p.losses} nederlag</div><div class="score-line">Samlet kampscore: ${p.matchPointsFor}-${p.matchPointsAgainst} · diff ${formatSigned(diff)}</div></div><div class="points">${p.ratingPoints}</div>`;list.appendChild(el)});document.getElementById('selectedCount').textContent='Valgt: '+tonightIds.length+' / 20'}
-function renderMatches(){const box=document.getElementById('matches'),sel=document.getElementById('roundSelector');box.innerHTML='';sel.innerHTML='';document.getElementById('matchTitle').textContent=currentRound===0?'Kampe':'Kampe · runde '+displayedRound;if(!rounds.length){box.innerHTML='<div class="panel"><p class="sub">Der er endnu ikke oprettet nogen kampe.</p></div>';renderMatchStatus(null);return}rounds.forEach(r=>{const b=document.createElement('button');b.textContent='Runde '+r.roundNumber;b.className=r.roundNumber===displayedRound?'':'inactive';b.onclick=()=>{displayedRound=r.roundNumber;saveState();renderMatches()};sel.appendChild(b)});let r=getDisplayedRoundData();if(!r){displayedRound=currentRound;r=getCurrentRoundData()}renderMatchStatus(r);r.matches.forEach(m=>{const a1=getPlayer(m.teamA[0]),a2=getPlayer(m.teamA[1]),b1=getPlayer(m.teamB[0]),b2=getPlayer(m.teamB[1]);const aw=m.saved&&m.scoreA>m.scoreB,bw=m.saved&&m.scoreB>m.scoreA,canEdit=m.saved&&m.round===currentRound,card=document.createElement('article');card.className='court-card';card.innerHTML=`<div class="court-header"><div class="court-title">Bane ${m.court}</div><div class="court-state ${m.saved?'saved':''}">${m.saved?'✓ Gemt':'Mangler resultat'}</div></div><div class="team ${aw?'winner':''}">${renderTeamPlayer(a1,m.rankA[0])}${renderTeamPlayer(a2,m.rankA[1])}<div class="rank-info">Par: nr. ${m.rankA[0]} + ${m.rankA[1]}</div></div><div class="vs">MOD</div><div class="team ${bw?'winner':''}">${renderTeamPlayer(b1,m.rankB[0])}${renderTeamPlayer(b2,m.rankB[1])}<div class="rank-info">Par: nr. ${m.rankB[0]} + ${m.rankB[1]}</div></div>${m.saved?`<div class="saved-result">Resultat: ${m.scoreA}-${m.scoreB}</div>${canEdit?`<button class="secondary" onclick="editMatch('${m.id}')">Ret resultat</button>`:'<div class="muted">Resultatet er låst.</div>'}`:`<div class="score-grid"><div class="score-field"><label>Point til ${escapeHtml(a1.name)} + ${escapeHtml(a2.name)}</label><input id="scoreA-${m.id}" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></div><div class="score-field"><label>Point til ${escapeHtml(b1.name)} + ${escapeHtml(b2.name)}</label><input id="scoreB-${m.id}" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></div></div><button onclick="saveMatch('${m.id}')">Gem resultat for bane ${m.court}</button>`}`;box.appendChild(card)})}
-function renderTeamPlayer(p,rank){const s=getTonightStats(p);return `<div class="team-player"><div><strong>${escapeHtml(p.name)}</strong><span class="muted"> · nr. ${rank}</span></div><div class="team-player-score">${p.ratingPoints} point · ${s.matchPointsFor}-${s.matchPointsAgainst}</div></div>`}
-function renderLeaderboard(){const box=document.getElementById('leaderboard');box.innerHTML='';if(tonightIds.length!==20){box.innerHTML='<div class="notice">Vælg først aftenens 20 spillere.</div>';return}getLeaderboard().forEach((p,i)=>{const s=getTonightStats(p),medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1,el=document.createElement('div');el.className='leader-card';el.innerHTML=`<div class="place">${medal}</div><div><div class="name">${escapeHtml(p.name)}</div><div class="muted">${s.games} kampe · ${s.wins} sejre · ${s.losses} nederlag</div><div class="score-line">Kampscore i aften: ${s.matchPointsFor}-${s.matchPointsAgainst}</div><div class="score-badge">${s.matchPointsFor} kamp-point</div></div><div class="points">${p.ratingPoints}</div>`;box.appendChild(el)})}
-function renderStatus(){document.getElementById('statSquad').textContent=squad.length;document.getElementById('statTonight').textContent=tonightIds.length+'/20';document.getElementById('statRound').textContent=currentRound+'/4';const r=getCurrentRoundData(),saved=r?r.matches.filter(m=>m.saved).length:0;document.getElementById('statResults').textContent=saved+'/5';renderHomeStatus(r);const n=document.getElementById('homeNotice');if(!squad.length)n.textContent='Opret først spillere i bruttotruppen.';else if(tonightIds.length!==20)n.textContent='Vælg præcis 20 spillere til aftenens turnering.';else if(currentRound===0)n.textContent='Aftenens spillere er klar. Lav runde 1.';else if(currentRound===4&&allMatchesSaved(r))n.textContent='Turneringen er færdig. Se leaderboard.';else if(allMatchesSaved(r))n.textContent='Alle resultater er gemt. Lav næste runde.';else n.textContent='Runde '+currentRound+' er i gang. Registrer resultaterne.';document.getElementById('topStatus').textContent='Bruttotrup: '+squad.length+' · Valgt: '+tonightIds.length+'/20 · Runde '+currentRound}
-function buildStatusBoxes(r){return[1,2,3,4,5].map(c=>{const m=r?r.matches.find(x=>x.court===c):null;return `<div class="status-box ${!m?'':m.saved?'done':'missing'}">B${c}<br>${!m?'–':m.saved?'✓':'!'}</div>`}).join('')}function renderHomeStatus(r){document.getElementById('roundStatus').innerHTML=buildStatusBoxes(r)}function renderMatchStatus(r){document.getElementById('matchStatus').innerHTML=buildStatusBoxes(r)}
-function seedExampleSquad(){['Thomas','Peter','Martin','Søren','Lars','Jens','Kasper','Anders','Mads','Rasmus','Michael','Henrik','Jesper','Niels','Christian','Jonas','Bo','Claus','Mikkel','Frederik','Simon','Mathias','Kim','Jan','Carsten','Emil','Oliver','Nicklas','Brian','Daniel'].forEach(name=>{if(!squad.some(p=>p.name.toLowerCase()===name.toLowerCase()))squad.push(createPlayer(name))});saveState();updateUI();showView('squadView')}
-function resetTonight(){if(!confirm('Nulstil aftenens turnering? Resultater fra denne aften trækkes tilbage.'))return;rounds.forEach(r=>r.matches.forEach(m=>{if(m.applied)rollbackMatchResult(m)}));tonightIds=[];tournamentId=null;currentRound=0;displayedRound=0;rounds=[];saveState();updateUI();showView('squadView')}
-function resetEverything(){if(!confirm('Dette sletter hele bruttotruppen, alle scores og resultater. Er du sikker?'))return;squad=[];tonightIds=[];tournamentId=null;currentRound=0;displayedRound=0;rounds=[];localStorage.removeItem(STORAGE_KEY);updateUI();showView('homeView')}
-function exportData(){const json=JSON.stringify({version:5,exportedAt:new Date().toISOString(),squad,tonightIds,tournamentId,currentRound,displayedRound,rounds},null,2);navigator.clipboard?.writeText(json).then(()=>alert('Sikkerhedskopien er kopieret.')).catch(()=>prompt('Kopiér sikkerhedskopien:',json))||prompt('Kopiér sikkerhedskopien:',json)}
-function importData(){const json=prompt('Indsæt sikkerhedskopien her:');if(!json)return;try{const d=JSON.parse(json);if(!Array.isArray(d.squad))throw new Error();if(!confirm('Importen erstatter nuværende data. Fortsæt?'))return;squad=d.squad||[];tonightIds=d.tonightIds||[];tournamentId=d.tournamentId||null;currentRound=d.currentRound||0;displayedRound=d.displayedRound||currentRound;rounds=d.rounds||[];migratePlayers();cleanInvalidReferences();saveState();updateUI();alert('Data er importeret.')}catch{alert('Sikkerhedskopien kunne ikke læses.')}}
-function showView(id){['homeView','squadView','matchesView','leaderView','adminView'].forEach(v=>{document.getElementById(v).classList.add('hidden');document.getElementById('tab-'+v).classList.remove('active')});document.getElementById(id).classList.remove('hidden');document.getElementById('tab-'+id).classList.add('active');if(id==='matchesView'&&currentRound>0&&displayedRound===0)displayedRound=currentRound;updateUI();window.scrollTo({top:0,behavior:'smooth'})}
-function updateUI(){renderSquad();renderMatches();renderLeaderboard();renderStatus()}function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify({squad,tonightIds,tournamentId,currentRound,displayedRound,rounds}))}function loadState(){const s=localStorage.getItem(STORAGE_KEY);if(!s)return;try{const d=JSON.parse(s);squad=d.squad||[];tonightIds=d.tonightIds||[];tournamentId=d.tournamentId||null;currentRound=d.currentRound||0;displayedRound=d.displayedRound||currentRound;rounds=d.rounds||[]}catch{}}
-function formatSigned(n){return n>0?'+'+n:String(n)}function escapeHtml(v){return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
-init();
-</script>
+
+<nav class="tabs">
+  <div class="tab active" id="tab-homeView" onclick="showView('homeView')"><strong>🏠</strong>Start</div>
+  <div class="tab" id="tab-squadView" onclick="showView('squadView')"><strong>👥</strong>Trup</div>
+  <div class="tab" id="tab-matchesView" onclick="showView('matchesView')"><strong>🎾</strong>Kampe</div>
+  <div class="tab" id="tab-leaderView" onclick="showView('leaderView')"><strong>🏆</strong>Rang</div>
+  <div class="tab" id="tab-adminView" onclick="showView('adminView')"><strong>⚙️</strong>Admin</div>
+</nav>
+
+<script src="app.js"></script>
 </body>
 </html>

@@ -42,16 +42,23 @@
   <section id="squadView" class="hidden">
     <div class="panel">
       <h2>Bruttotrup</h2>
-      <p class="sub">Søg, opret og vælg præcis 20 spillere. Ranglistepoint og kampresultater gemmes permanent på denne enhed.</p>
+      <p class="sub">Vælg antal deltagere og derefter spillerne. Antallet skal være deleligt med 4, fordi der spiller fire på hver bane.</p>
+
+      <label class="field-label" for="participantTarget">Antal spillere i aften</label>
+      <input id="participantTarget" type="number" min="4" step="4" value="20" inputmode="numeric" onchange="changeParticipantTarget()">
+      <div class="sub target-help" id="courtCountText">20 spillere = 5 baner</div>
+
       <input id="searchPlayer" type="search" placeholder="Søg efter spiller..." oninput="renderSquad()">
       <input id="newPlayerName" type="text" placeholder="Navn på ny spiller">
       <button onclick="addPlayer()">➕ Opret ny spiller med 500 point</button>
+
       <div class="selection-summary">
         <strong id="selectedCount">Valgt: 0 / 20</strong>
-        <div class="sub">Tryk på en spiller for at tilmelde eller afmelde.</div>
+        <div class="sub">Tryk på en spiller for at tilmelde eller afmelde. Papirkurven sletter spilleren permanent.</div>
       </div>
+
       <div id="squadList"></div>
-      <button onclick="confirmTonightPlayers()">Gem aftenens 20 spillere</button>
+      <button onclick="confirmTonightPlayers()">Gem aftenens spillere</button>
     </div>
   </section>
 
@@ -67,7 +74,7 @@
   <section id="leaderView" class="hidden">
     <div class="panel">
       <h2>Aftenens leaderboard</h2>
-      <p class="sub">Ranglistepoint afgør placeringen. Ved pointlighed afgør flest kamp-point i aften.</p>
+      <p class="sub">Ranglistepoint afgør placeringen. Ved pointlighed afgør flest kamp-point i aften. Bruttotruppens samlede statistik fortsætter fra turnering til turnering.</p>
       <div id="leaderboard"></div>
     </div>
   </section>
@@ -75,6 +82,7 @@
   <section id="adminView" class="hidden">
     <div class="panel">
       <h2>Admin</h2>
+      <div class="notice">Spillernes ranglistepoint, kampe, sejre, nederlag og kamp-point gemmes i bruttotruppen og opdateres efter hver gemt kamp.</div>
       <button onclick="seedExampleSquad()">Indsæt test-bruttotrup</button>
       <button class="secondary" onclick="exportData()">Eksportér sikkerhedskopi</button>
       <button class="secondary" onclick="importData()">Importér sikkerhedskopi</button>

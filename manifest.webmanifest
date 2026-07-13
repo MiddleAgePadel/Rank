@@ -1,0 +1,12 @@
+{
+  "name": "Middle Age Padel",
+  "short_name": "Padel",
+  "description": "Mobil turneringsstyring, matchmaking og leaderboard til padel.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#061817",
+  "theme_color": "#061817",
+  "orientation": "portrait-primary",
+  "icons": []
+}

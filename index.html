@@ -4,10 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#061817">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Padel">
   <title>Padel Matchmaker</title>
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="v89.css">
 </head>
 <body>
+<div class="offline-badge">Offline</div>
 <header>
   <h1>Padel Matchmaker</h1>
   <div class="sub" id="topStatus">Bruttotrup · rangliste · kampe</div>
@@ -88,8 +94,8 @@
 
   <section id="leaderView" class="hidden">
     <div class="panel">
-      <h2>Aftenens leaderboard</h2>
-      <p class="sub">Ranglistepoint afgør placeringen. Ved pointlighed afgør flest kamp-point i aften.</p>
+      <h2>Leaderboard</h2>
+      <p class="sub">Skift mellem aftenens stilling og den samlede rangliste. Ved pointlighed afgør kamp-point og pointdifference.</p>
       <div id="leaderboard"></div>
     </div>
   </section>
@@ -115,6 +121,12 @@
       <h2>Admin</h2>
       <div class="notice">Spillernes statistik gemmes permanent. Reserver kan sættes ind i en igangværende turnering før næste runde eller i en kamp, der endnu ikke er gemt.</div>
 
+      <div id="installPanel" class="install-panel hidden">
+        <strong>Installer som app</strong>
+        <div class="sub">Få appen på hjemmeskærmen og brug den mere som en almindelig iPhone-app.</div>
+        <button onclick="installApp()">Installer app</button>
+      </div>
+
       <div id="substitutionPanel" class="admin-block">
         <h3>Spillerskifte</h3>
         <label class="field-label" for="outPlayerSelect">Spiller ud</label>
@@ -137,6 +149,8 @@
   </section>
 </main>
 
+<div class="mobile-action"><button onclick="focusNextMissingCourt()">Næste manglende bane</button></div>
+
 <nav class="tabs">
   <div class="tab active" id="tab-homeView" onclick="showView('homeView')"><strong>🏠</strong>Start</div>
   <div class="tab" id="tab-squadView" onclick="showView('squadView')"><strong>👥</strong>Trup</div>
@@ -146,5 +160,6 @@
 </nav>
 
 <script src="app.js"></script>
+<script src="v89.js"></script>
 </body>
 </html>

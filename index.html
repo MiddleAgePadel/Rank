@@ -54,7 +54,7 @@
 
       <div class="selection-summary">
         <strong id="selectedCount">Valgt: 0 / 20</strong>
-        <div class="sub">Tryk på en spiller for at tilmelde eller afmelde. Papirkurven sletter spilleren permanent.</div>
+        <div class="sub">Tryk på en spiller for at tilmelde eller afmelde. Brug profilknappen for statistik og historik.</div>
       </div>
 
       <div id="squadList"></div>
@@ -74,8 +74,15 @@
   <section id="leaderView" class="hidden">
     <div class="panel">
       <h2>Aftenens leaderboard</h2>
-      <p class="sub">Ranglistepoint afgør placeringen. Ved pointlighed afgør flest kamp-point i aften. Bruttotruppens samlede statistik fortsætter fra turnering til turnering.</p>
+      <p class="sub">Ranglistepoint afgør placeringen. Ved pointlighed afgør flest kamp-point i aften. Tryk på en spiller for at se profilen.</p>
       <div id="leaderboard"></div>
+    </div>
+  </section>
+
+  <section id="profileView" class="hidden">
+    <div class="panel">
+      <button class="secondary back-button" onclick="closePlayerProfile()">← Tilbage</button>
+      <div id="playerProfile"></div>
     </div>
   </section>
 

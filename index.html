@@ -19,7 +19,7 @@
       <h2>Dashboard</h2>
       <div class="dashboard">
         <div class="stat"><strong id="statSquad">0</strong>Bruttotrup</div>
-        <div class="stat"><strong id="statTonight">0/20</strong>I aften</div>
+        <div class="stat"><strong id="statTonight">0/20</strong>Spillere</div>
         <div class="stat"><strong id="statRound">0/4</strong>Runde</div>
         <div class="stat"><strong id="statResults">0/5</strong>Resultater</div>
       </div>
@@ -27,10 +27,11 @@
 
     <div class="panel">
       <div class="notice" id="homeNotice">Opret eller vælg spillere fra bruttotruppen.</div>
-      <button onclick="showView('squadView')">👥 Vælg aftenens spillere</button>
+      <button onclick="showView('squadView')">👥 Opsæt turnering</button>
       <button class="blue" onclick="generateNextRound()">🎾 Lav næste runde</button>
       <button class="secondary" onclick="showView('matchesView')">Se kampe</button>
       <button class="secondary" onclick="showView('leaderView')">Se leaderboard</button>
+      <button class="secondary" onclick="showView('historyView')">Se turneringshistorik</button>
     </div>
 
     <div class="panel">
@@ -41,11 +42,19 @@
 
   <section id="squadView" class="hidden">
     <div class="panel">
-      <h2>Bruttotrup</h2>
-      <p class="sub">Vælg antal deltagere og derefter spillerne. Antallet skal være deleligt med 4, fordi der spiller fire på hver bane.</p>
+      <h2>Turneringsopsætning</h2>
+      <p class="sub">Vælg aktive spillere, reserver og antal runder. Antallet af aktive spillere skal være deleligt med 4.</p>
 
-      <label class="field-label" for="participantTarget">Antal spillere i aften</label>
-      <input id="participantTarget" type="number" min="4" step="4" value="20" inputmode="numeric" onchange="changeParticipantTarget()">
+      <div class="setup-grid">
+        <div>
+          <label class="field-label" for="participantTarget">Aktive spillere</label>
+          <input id="participantTarget" type="number" min="4" step="4" value="20" inputmode="numeric" onchange="changeParticipantTarget()">
+        </div>
+        <div>
+          <label class="field-label" for="totalRoundsInput">Antal runder</label>
+          <input id="totalRoundsInput" type="number" min="1" max="12" step="1" value="4" inputmode="numeric" onchange="changeTotalRounds()">
+        </div>
+      </div>
       <div class="sub target-help" id="courtCountText">20 spillere = 5 baner</div>
 
       <input id="searchPlayer" type="search" placeholder="Søg efter spiller..." oninput="renderSquad()">
@@ -53,12 +62,18 @@
       <button onclick="addPlayer()">➕ Opret ny spiller med 500 point</button>
 
       <div class="selection-summary">
-        <strong id="selectedCount">Valgt: 0 / 20</strong>
-        <div class="sub">Tryk på en spiller for at tilmelde eller afmelde. Brug profilknappen for statistik og historik.</div>
+        <strong id="selectedCount">Aktive: 0 / 20</strong>
+        <div class="sub" id="reserveCount">Reserver: 0</div>
+      </div>
+
+      <div class="legend-row">
+        <span><i class="legend-dot active-dot"></i>Aktiv</span>
+        <span><i class="legend-dot reserve-dot"></i>Reserve</span>
+        <span><i class="legend-dot neutral-dot"></i>Ikke valgt</span>
       </div>
 
       <div id="squadList"></div>
-      <button onclick="confirmTonightPlayers()">Gem aftenens spillere</button>
+      <button onclick="confirmTonightPlayers()">Startklar turnering</button>
     </div>
   </section>
 
@@ -74,7 +89,7 @@
   <section id="leaderView" class="hidden">
     <div class="panel">
       <h2>Aftenens leaderboard</h2>
-      <p class="sub">Ranglistepoint afgør placeringen. Ved pointlighed afgør flest kamp-point i aften. Tryk på en spiller for at se profilen.</p>
+      <p class="sub">Ranglistepoint afgør placeringen. Ved pointlighed afgør flest kamp-point i aften.</p>
       <div id="leaderboard"></div>
     </div>
   </section>
@@ -86,13 +101,34 @@
     </div>
   </section>
 
+  <section id="historyView" class="hidden">
+    <div class="panel">
+      <button class="secondary back-button" onclick="showView('homeView')">← Tilbage</button>
+      <h2>Turneringshistorik</h2>
+      <p class="sub">Afsluttede turneringer gemmes på denne enhed med slutstilling og kampresultater.</p>
+      <div id="tournamentHistory"></div>
+    </div>
+  </section>
+
   <section id="adminView" class="hidden">
     <div class="panel">
       <h2>Admin</h2>
-      <div class="notice">Spillernes ranglistepoint, kampe, sejre, nederlag og kamp-point gemmes i bruttotruppen og opdateres efter hver gemt kamp.</div>
+      <div class="notice">Spillernes statistik gemmes permanent. Reserver kan sættes ind i en igangværende turnering før næste runde eller i en kamp, der endnu ikke er gemt.</div>
+
+      <div id="substitutionPanel" class="admin-block">
+        <h3>Spillerskifte</h3>
+        <label class="field-label" for="outPlayerSelect">Spiller ud</label>
+        <select id="outPlayerSelect"></select>
+        <label class="field-label" for="inPlayerSelect">Reserve ind</label>
+        <select id="inPlayerSelect"></select>
+        <button onclick="substitutePlayer()">Gennemfør spillerskifte</button>
+      </div>
+
       <button onclick="seedExampleSquad()">Indsæt test-bruttotrup</button>
       <button class="secondary" onclick="exportData()">Eksportér sikkerhedskopi</button>
       <button class="secondary" onclick="importData()">Importér sikkerhedskopi</button>
+      <button class="secondary" onclick="showView('historyView')">Se turneringshistorik</button>
+
       <div class="danger-zone">
         <button class="orange" onclick="resetTonight()">Nulstil aftenens turnering</button>
         <button class="red" onclick="resetEverything()">Slet ALT</button>

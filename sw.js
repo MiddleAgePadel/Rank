@@ -1,18 +1,39 @@
-const CACHE='padel-v10-2';
-const ASSETS=['./','./index.html','./style.css?v=10.2','./v89.css?v=10.2','./app.js?v=10.2','./v89.js?v=10.2','./manifest.webmanifest?v=10.2'];
+const CACHE='padel-v10-3';
+const STATIC_FALLBACK=['./','./index.html'];
+
 self.addEventListener('install',event=>{
-  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));
+  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(STATIC_FALLBACK)));
   self.skipWaiting();
 });
+
 self.addEventListener('activate',event=>{
-  event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))));
-  self.clients.claim();
+  event.waitUntil(
+    caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
+      .then(()=>self.clients.claim())
+  );
 });
+
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
-  event.respondWith(fetch(event.request,{cache:'no-store'}).then(response=>{
-    const copy=response.clone();
-    caches.open(CACHE).then(cache=>cache.put(event.request,copy));
-    return response;
-  }).catch(()=>caches.match(event.request).then(cached=>cached||caches.match('./index.html'))));
+  const url=new URL(event.request.url);
+
+  // JavaScript, CSS og manifest hentes altid direkte fra nettet,
+  // så nye GitHub-versioner ikke bliver hængende i PWA-cachen.
+  if(/\.(js|css|webmanifest)$/.test(url.pathname)){
+    event.respondWith(fetch(event.request,{cache:'no-store'}));
+    return;
+  }
+
+  // HTML: network-first med offline fallback.
+  if(event.request.mode==='navigate'){
+    event.respondWith(
+      fetch(event.request,{cache:'no-store'})
+        .then(response=>{
+          const copy=response.clone();
+          caches.open(CACHE).then(cache=>cache.put('./index.html',copy));
+          return response;
+        })
+        .catch(()=>caches.match('./index.html'))
+    );
+  }
 });

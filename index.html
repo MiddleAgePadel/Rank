@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Padel">
   <title>Padel Matchmaker</title>
-  <link rel="manifest" href="manifest.webmanifest?v=10.2">
-  <link rel="stylesheet" href="style.css?v=10.2">
-  <link rel="stylesheet" href="v89.css?v=10.2">
+  <link rel="manifest" href="manifest.webmanifest?v=10.3">
+  <link rel="stylesheet" href="style.css?v=10.3">
+  <link rel="stylesheet" href="v89.css?v=10.3">
 </head>
 <body>
 <div class="offline-badge">Offline</div>
@@ -78,7 +78,12 @@
 
 <nav class="tabs"><div class="tab active" id="tab-homeView" onclick="showView('homeView')"><strong>🏠</strong>Start</div><div class="tab" id="tab-squadView" onclick="showView('squadView')"><strong>👥</strong>Trup</div><div class="tab" id="tab-matchesView" onclick="showView('matchesView')"><strong>🎾</strong>Kampe</div><div class="tab" id="tab-leaderView" onclick="showView('leaderView')"><strong>🏆</strong>Rang</div><div class="tab" id="tab-adminView" onclick="showView('adminView')"><strong>⚙️</strong>Admin</div></nav>
 
-<script src="app.js?v=10.2"></script>
-<script src="v89.js?v=10.2"></script>
+<script src="app.js?v=10.3"></script>
+<script src="v89.js?v=10.3"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then(reg => reg && reg.update()).catch(()=>{});
+  }
+</script>
 </body>
 </html>

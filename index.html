@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Padel">
   <title>Padel Matchmaker</title>
-  <link rel="manifest" href="manifest.webmanifest?v=10.7">
-  <link rel="stylesheet" href="style.css?v=10.7">
-  <link rel="stylesheet" href="v89.css?v=10.7">
+  <link rel="manifest" href="manifest.webmanifest?v=10.8">
+  <link rel="stylesheet" href="style.css?v=10.8">
+  <link rel="stylesheet" href="v89.css?v=10.8">
 </head>
 <body>
 <div class="offline-badge">Offline</div>
@@ -25,5 +25,5 @@
 <section id="adminView" class="hidden"><div class="panel"><h2>Admin</h2><div class="notice">Spillernes statistik gemmes permanent. Reserver kan sættes ind i en igangværende turnering før næste runde eller i en kamp, der endnu ikke er gemt.</div><div id="installPanel" class="install-panel hidden"><strong>Installer som app</strong><div class="sub">Få appen på hjemmeskærmen og brug den mere som en almindelig iPhone-app.</div><button onclick="installApp()">Installer app</button></div><div id="substitutionPanel" class="admin-block"><h3>Spillerskifte</h3><label class="field-label" for="outPlayerSelect">Spiller ud</label><select id="outPlayerSelect"></select><label class="field-label" for="inPlayerSelect">Reserve ind</label><select id="inPlayerSelect"></select><button onclick="substitutePlayer()">Gennemfør spillerskifte</button></div><button onclick="seedExampleSquad()">Indsæt test-bruttotrup</button><button class="secondary" onclick="exportData()">Download Excel-sikkerhedskopi</button><button class="secondary" onclick="importData()">Importér Excel-sikkerhedskopi</button><button class="secondary" onclick="showView('historyView')">Se turneringshistorik</button><div class="danger-zone"><button class="orange" onclick="resetTonight()">Afslut aftenens turnering</button><button class="red" onclick="resetEverything()">Slet ALT</button></div></div></section>
 </main>
 <nav class="tabs"><div class="tab active" id="tab-homeView" onclick="showView('homeView')"><strong>🏠</strong>Start</div><div class="tab" id="tab-squadView" onclick="showView('squadView')"><strong>👥</strong>Trup</div><div class="tab" id="tab-matchesView" onclick="showView('matchesView')"><strong>🎾</strong>Kampe</div><div class="tab" id="tab-leaderView" onclick="showView('leaderView')"><strong>🏆</strong>Rang</div><div class="tab" id="tab-adminView" onclick="showView('adminView')"><strong>⚙️</strong>Admin</div></nav>
-<script src="app.js?v=10.7"></script><script src="v89.js?v=10.7"></script><script src="matchmaking.js?v=10.7"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="backup.js?v=10.7"></script><script>if('serviceWorker' in navigator){navigator.serviceWorker.getRegistration().then(reg=>reg&&reg.update()).catch(()=>{});}</script>
+<script src="app.js?v=10.8"></script><script src="v89.js?v=10.8"></script><script src="matchmaking.js?v=10.8"></script><script src="backup.js?v=10.8"></script><script>if('serviceWorker' in navigator){navigator.serviceWorker.getRegistration().then(reg=>reg&&reg.update()).catch(()=>{});}</script>
 </body></html>

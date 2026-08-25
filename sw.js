@@ -1,4 +1,4 @@
-const CACHE='padel-v10-4';
+const CACHE='padel-v10-5';
 const STATIC_FALLBACK=['./','./index.html'];
 
 self.addEventListener('install',event=>{

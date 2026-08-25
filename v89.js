@@ -216,4 +216,57 @@ document.addEventListener('touchend',event=>{
   if(next!==current)showView(views[next]);
 },{passive:true});
 
+// Ny turnering uden at slette eller rulle statistik tilbage.
+function tournamentIsFinished(){
+  const round=getCurrentRoundData();
+  return Boolean(tournamentId&&currentRound===totalRounds&&round&&allMatchesSaved(round));
+}
+
+function startNewTournament(){
+  if(tournamentId&&!tournamentIsFinished()){
+    alert('Den nuværende turnering er ikke afsluttet endnu. Afslut den først, eller brug “Nulstil aftenens turnering” under Admin, hvis den skal annulleres.');
+    return;
+  }
+
+  // Bevar squad, rating, kampe, kamp-point og tournamentHistory.
+  tonightIds=[];
+  reserveIds=[];
+  tournamentId=null;
+  currentRound=0;
+  displayedRound=0;
+  rounds=[];
+  selectedProfileId=null;
+  leaderboardMode='tonight';
+  localStorage.setItem('padelLeaderboardMode','tonight');
+  saveState();
+  updateUI();
+  showView('squadView');
+  vibrate(25);
+}
+
+function ensureNewTournamentButton(){
+  if(document.getElementById('newTournamentButton'))return;
+  const actionPanel=document.querySelector('#homeView .panel:nth-of-type(2)');
+  if(!actionPanel)return;
+  const button=document.createElement('button');
+  button.id='newTournamentButton';
+  button.className='new-tournament-button';
+  button.textContent='➕ Ny turnering';
+  button.onclick=startNewTournament;
+  actionPanel.insertBefore(button,actionPanel.querySelector('button'));
+}
+
+// Gør Admin-reset sikker efter en afsluttet turnering:
+// afsluttet turnering = ryd kun turneringssessionen, behold statistik.
+const legacyResetTonight=resetTonight;
+resetTonight=function(){
+  if(tournamentIsFinished()){
+    if(!confirm('Turneringen er afsluttet og gemt. Vil du rydde aftenens turnering og gøre klar til en ny? Spillernes statistik og turneringshistorik bevares.'))return;
+    startNewTournament();
+    return;
+  }
+  legacyResetTonight();
+};
+
+ensureNewTournamentButton();
 updateUI();

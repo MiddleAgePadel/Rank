@@ -1,4 +1,4 @@
-const CACHE='padel-v10-3';
+const CACHE='padel-v10-4';
 const STATIC_FALLBACK=['./','./index.html'];
 
 self.addEventListener('install',event=>{
@@ -17,14 +17,11 @@ self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   const url=new URL(event.request.url);
 
-  // JavaScript, CSS og manifest hentes altid direkte fra nettet,
-  // så nye GitHub-versioner ikke bliver hængende i PWA-cachen.
   if(/\.(js|css|webmanifest)$/.test(url.pathname)){
     event.respondWith(fetch(event.request,{cache:'no-store'}));
     return;
   }
 
-  // HTML: network-first med offline fallback.
   if(event.request.mode==='navigate'){
     event.respondWith(
       fetch(event.request,{cache:'no-store'})

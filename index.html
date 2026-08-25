@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Padel">
   <title>Padel Matchmaker</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="v89.css">
+  <link rel="manifest" href="manifest.webmanifest?v=10.2">
+  <link rel="stylesheet" href="style.css?v=10.2">
+  <link rel="stylesheet" href="v89.css?v=10.2">
 </head>
 <body>
 <div class="offline-badge">Offline</div>
@@ -50,114 +50,35 @@
     <div class="panel">
       <h2>Turneringsopsætning</h2>
       <p class="sub">Vælg aktive spillere, reserver og antal runder. Antallet af aktive spillere skal være deleligt med 4.</p>
-
       <div class="setup-grid">
-        <div>
-          <label class="field-label" for="participantTarget">Aktive spillere</label>
-          <input id="participantTarget" type="number" min="4" step="4" value="20" inputmode="numeric" onchange="changeParticipantTarget()">
-        </div>
-        <div>
-          <label class="field-label" for="totalRoundsInput">Antal runder</label>
-          <input id="totalRoundsInput" type="number" min="1" max="12" step="1" value="4" inputmode="numeric" onchange="changeTotalRounds()">
-        </div>
+        <div><label class="field-label" for="participantTarget">Aktive spillere</label><input id="participantTarget" type="number" min="4" step="4" value="20" inputmode="numeric" onchange="changeParticipantTarget()"></div>
+        <div><label class="field-label" for="totalRoundsInput">Antal runder</label><input id="totalRoundsInput" type="number" min="1" max="12" step="1" value="4" inputmode="numeric" onchange="changeTotalRounds()"></div>
       </div>
       <div class="sub target-help" id="courtCountText">20 spillere = 5 baner</div>
-
       <input id="searchPlayer" type="search" placeholder="Søg efter spiller..." oninput="renderSquad()">
       <input id="newPlayerName" type="text" placeholder="Navn på ny spiller">
       <button onclick="addPlayer()">➕ Opret ny spiller med 500 point</button>
-
-      <div class="selection-summary">
-        <strong id="selectedCount">Aktive: 0 / 20</strong>
-        <div class="sub" id="reserveCount">Reserver: 0</div>
-      </div>
-
-      <div class="legend-row">
-        <span><i class="legend-dot active-dot"></i>Aktiv</span>
-        <span><i class="legend-dot reserve-dot"></i>Reserve</span>
-        <span><i class="legend-dot neutral-dot"></i>Ikke valgt</span>
-      </div>
-
+      <div class="selection-summary"><strong id="selectedCount">Aktive: 0 / 20</strong><div class="sub" id="reserveCount">Reserver: 0</div></div>
+      <div class="legend-row"><span><i class="legend-dot active-dot"></i>Aktiv</span><span><i class="legend-dot reserve-dot"></i>Reserve</span><span><i class="legend-dot neutral-dot"></i>Ikke valgt</span></div>
       <div id="squadList"></div>
       <button onclick="confirmTonightPlayers()">Startklar turnering</button>
     </div>
   </section>
 
-  <section id="matchesView" class="hidden">
-    <div class="panel">
-      <h2 id="matchTitle">Kampe</h2>
-      <div class="round-selector" id="roundSelector"></div>
-      <div class="status-grid" id="matchStatus"></div>
-    </div>
-    <div class="matches-grid" id="matches"></div>
-  </section>
+  <section id="matchesView" class="hidden"><div class="panel"><h2 id="matchTitle">Kampe</h2><div class="round-selector" id="roundSelector"></div><div class="status-grid" id="matchStatus"></div></div><div class="matches-grid" id="matches"></div></section>
 
-  <section id="leaderView" class="hidden">
-    <div class="panel">
-      <h2>Leaderboard</h2>
-      <p class="sub">Skift mellem aftenens stilling og den samlede rangliste. Ved pointlighed afgør kamp-point og pointdifference.</p>
-      <div id="leaderboard"></div>
-    </div>
-  </section>
+  <section id="leaderView" class="hidden"><div class="panel"><h2>Leaderboard</h2><p class="sub">Skift mellem aftenens stilling og den samlede rangliste. Ved pointlighed afgør kamp-point og pointdifference.</p><div id="leaderboard"></div></div></section>
 
-  <section id="profileView" class="hidden">
-    <div class="panel">
-      <button class="secondary back-button" onclick="closePlayerProfile()">← Tilbage</button>
-      <div id="playerProfile"></div>
-    </div>
-  </section>
+  <section id="profileView" class="hidden"><div class="panel"><button class="secondary back-button" onclick="closePlayerProfile()">← Tilbage</button><div id="playerProfile"></div></div></section>
 
-  <section id="historyView" class="hidden">
-    <div class="panel">
-      <button class="secondary back-button" onclick="showView('homeView')">← Tilbage</button>
-      <h2>Turneringshistorik</h2>
-      <p class="sub">Afsluttede turneringer gemmes på denne enhed med slutstilling og kampresultater.</p>
-      <div id="tournamentHistory"></div>
-    </div>
-  </section>
+  <section id="historyView" class="hidden"><div class="panel"><button class="secondary back-button" onclick="showView('homeView')">← Tilbage</button><h2>Turneringshistorik</h2><p class="sub">Afsluttede turneringer gemmes på denne enhed med slutstilling og kampresultater.</p><div id="tournamentHistory"></div></div></section>
 
-  <section id="adminView" class="hidden">
-    <div class="panel">
-      <h2>Admin</h2>
-      <div class="notice">Spillernes statistik gemmes permanent. Reserver kan sættes ind i en igangværende turnering før næste runde eller i en kamp, der endnu ikke er gemt.</div>
-
-      <div id="installPanel" class="install-panel hidden">
-        <strong>Installer som app</strong>
-        <div class="sub">Få appen på hjemmeskærmen og brug den mere som en almindelig iPhone-app.</div>
-        <button onclick="installApp()">Installer app</button>
-      </div>
-
-      <div id="substitutionPanel" class="admin-block">
-        <h3>Spillerskifte</h3>
-        <label class="field-label" for="outPlayerSelect">Spiller ud</label>
-        <select id="outPlayerSelect"></select>
-        <label class="field-label" for="inPlayerSelect">Reserve ind</label>
-        <select id="inPlayerSelect"></select>
-        <button onclick="substitutePlayer()">Gennemfør spillerskifte</button>
-      </div>
-
-      <button onclick="seedExampleSquad()">Indsæt test-bruttotrup</button>
-      <button class="secondary" onclick="exportData()">Eksportér sikkerhedskopi</button>
-      <button class="secondary" onclick="importData()">Importér sikkerhedskopi</button>
-      <button class="secondary" onclick="showView('historyView')">Se turneringshistorik</button>
-
-      <div class="danger-zone">
-        <button class="orange" onclick="resetTonight()">Nulstil aftenens turnering</button>
-        <button class="red" onclick="resetEverything()">Slet ALT</button>
-      </div>
-    </div>
-  </section>
+  <section id="adminView" class="hidden"><div class="panel"><h2>Admin</h2><div class="notice">Spillernes statistik gemmes permanent. Reserver kan sættes ind i en igangværende turnering før næste runde eller i en kamp, der endnu ikke er gemt.</div><div id="installPanel" class="install-panel hidden"><strong>Installer som app</strong><div class="sub">Få appen på hjemmeskærmen og brug den mere som en almindelig iPhone-app.</div><button onclick="installApp()">Installer app</button></div><div id="substitutionPanel" class="admin-block"><h3>Spillerskifte</h3><label class="field-label" for="outPlayerSelect">Spiller ud</label><select id="outPlayerSelect"></select><label class="field-label" for="inPlayerSelect">Reserve ind</label><select id="inPlayerSelect"></select><button onclick="substitutePlayer()">Gennemfør spillerskifte</button></div><button onclick="seedExampleSquad()">Indsæt test-bruttotrup</button><button class="secondary" onclick="exportData()">Eksportér sikkerhedskopi</button><button class="secondary" onclick="importData()">Importér sikkerhedskopi</button><button class="secondary" onclick="showView('historyView')">Se turneringshistorik</button><div class="danger-zone"><button class="orange" onclick="resetTonight()">Nulstil aftenens turnering</button><button class="red" onclick="resetEverything()">Slet ALT</button></div></div></section>
 </main>
 
-<nav class="tabs">
-  <div class="tab active" id="tab-homeView" onclick="showView('homeView')"><strong>🏠</strong>Start</div>
-  <div class="tab" id="tab-squadView" onclick="showView('squadView')"><strong>👥</strong>Trup</div>
-  <div class="tab" id="tab-matchesView" onclick="showView('matchesView')"><strong>🎾</strong>Kampe</div>
-  <div class="tab" id="tab-leaderView" onclick="showView('leaderView')"><strong>🏆</strong>Rang</div>
-  <div class="tab" id="tab-adminView" onclick="showView('adminView')"><strong>⚙️</strong>Admin</div>
-</nav>
+<nav class="tabs"><div class="tab active" id="tab-homeView" onclick="showView('homeView')"><strong>🏠</strong>Start</div><div class="tab" id="tab-squadView" onclick="showView('squadView')"><strong>👥</strong>Trup</div><div class="tab" id="tab-matchesView" onclick="showView('matchesView')"><strong>🎾</strong>Kampe</div><div class="tab" id="tab-leaderView" onclick="showView('leaderView')"><strong>🏆</strong>Rang</div><div class="tab" id="tab-adminView" onclick="showView('adminView')"><strong>⚙️</strong>Admin</div></nav>
 
-<script src="app.js"></script>
-<script src="v89.js"></script>
+<script src="app.js?v=10.2"></script>
+<script src="v89.js?v=10.2"></script>
 </body>
 </html>

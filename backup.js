@@ -4,7 +4,7 @@ function buildBackupState(){
   return {
     format:BACKUP_FORMAT,
     exportedAt:new Date().toISOString(),
-    appVersion:'10.5',
+    appVersion:'10.7',
     state:{
       squad,
       tonightIds,
@@ -33,23 +33,20 @@ function playerName(id){
 }
 
 function buildPlayersSheet(){
-  return squad
-    .slice()
-    .sort((a,b)=>a.name.localeCompare(b.name,'da'))
-    .map((p,index)=>({
-      Nr:index+1,
-      Navn:p.name,
-      Rating:p.ratingPoints,
-      Kampe:p.games,
-      Sejre:p.wins,
-      Nederlag:p.losses,
-      'Winrate %':p.games?Math.round((p.wins/p.games)*100):0,
-      'Kamp-point for':p.matchPointsFor,
-      'Kamp-point imod':p.matchPointsAgainst,
-      Pointdifference:(p.matchPointsFor||0)-(p.matchPointsAgainst||0),
-      Oprettet:excelDate(p.createdAt),
-      Spiller_ID:p.id
-    }));
+  return squad.slice().sort((a,b)=>a.name.localeCompare(b.name,'da')).map((p,index)=>({
+    Nr:index+1,
+    Navn:p.name,
+    Rating:p.ratingPoints,
+    Kampe:p.games,
+    Sejre:p.wins,
+    Nederlag:p.losses,
+    'Winrate %':p.games?Math.round((p.wins/p.games)*100):0,
+    'Kamp-point for':p.matchPointsFor,
+    'Kamp-point imod':p.matchPointsAgainst,
+    Pointdifference:(p.matchPointsFor||0)-(p.matchPointsAgainst||0),
+    Oprettet:excelDate(p.createdAt),
+    Spiller_ID:p.id
+  }));
 }
 
 function buildTournamentsSheet(){
@@ -131,86 +128,101 @@ function buildResultsSheet(){
       });
     });
   });
-  rows.sort((a,b)=>String(b.Dato).localeCompare(String(a.Dato),'da'));
   return rows;
 }
 
 function sheetFromRows(rows,headers){
   const safeRows=rows.length?rows:[Object.fromEntries(headers.map(h=>[h,'']))];
   const ws=XLSX.utils.json_to_sheet(safeRows,{header:headers});
-  ws['!autofilter']={ref:ws['!ref']};
+  if(ws['!ref'])ws['!autofilter']={ref:ws['!ref']};
   return ws;
 }
 
-function setColumnWidths(ws,widths){
-  ws['!cols']=widths.map(w=>({wch:w}));
+function setColumnWidths(ws,widths){ws['!cols']=widths.map(w=>({wch:w}));}
+
+function createWorkbook(){
+  const wb=XLSX.utils.book_new();
+
+  const wsPlayers=sheetFromRows(buildPlayersSheet(),['Nr','Navn','Rating','Kampe','Sejre','Nederlag','Winrate %','Kamp-point for','Kamp-point imod','Pointdifference','Oprettet','Spiller_ID']);
+  setColumnWidths(wsPlayers,[5,24,10,9,9,11,11,15,17,15,20,28]);
+  XLSX.utils.book_append_sheet(wb,wsPlayers,'Spillere');
+
+  const wsTournaments=sheetFromRows(buildTournamentsSheet(),['Nr','Dato','Vinder','Spillere','Reserver','Runder','Baner','Turnerings_ID']);
+  setColumnWidths(wsTournaments,[5,20,24,10,35,8,8,30]);
+  XLSX.utils.book_append_sheet(wb,wsTournaments,'Turneringer');
+
+  const wsMatches=sheetFromRows(flattenMatches(),['Dato','Turnerings_ID','Runde','Bane','Par 1 spiller 1','Par 1 spiller 2','Par 2 spiller 1','Par 2 spiller 2','Par 1 point','Par 2 point','Gemt','Kamp_ID']);
+  setColumnWidths(wsMatches,[20,30,8,8,22,22,22,22,12,12,8,30]);
+  XLSX.utils.book_append_sheet(wb,wsMatches,'Kampe');
+
+  const wsResults=sheetFromRows(buildResultsSheet(),['Spiller','Dato','Turnerings_ID','Runde','Bane','Resultat','Point for','Point imod','Ratingændring','Kamp_ID','Spiller_ID']);
+  setColumnWidths(wsResults,[24,20,30,8,8,12,11,12,14,30,28]);
+  XLSX.utils.book_append_sheet(wb,wsResults,'Resultater');
+
+  const payload=JSON.stringify(buildBackupState());
+  const chunks=[];
+  for(let i=0;i<payload.length;i+=30000)chunks.push({Del:(i/30000)+1,Data:payload.slice(i,i+30000)});
+  const wsBackup=XLSX.utils.json_to_sheet(chunks,{header:['Del','Data']});
+  XLSX.utils.book_append_sheet(wb,wsBackup,'BACKUP_DATA');
+  wb.Workbook=wb.Workbook||{};
+  wb.Workbook.Sheets=wb.SheetNames.map(name=>({name,Hidden:name==='BACKUP_DATA'?2:0}));
+  return wb;
 }
 
-function exportData(){
+function backupFilename(){
+  const date=new Date();
+  const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');
+  const hh=String(date.getHours()).padStart(2,'0'),mm=String(date.getMinutes()).padStart(2,'0');
+  return `Padel-sikkerhedskopi-${y}-${m}-${d}-${hh}${mm}.xlsx`;
+}
+
+async function exportData(){
   if(typeof XLSX==='undefined'){
-    alert('Excel-funktionen kunne ikke indlæses. Kontrollér internetforbindelsen og genindlæs appen.');
+    alert('Excel-modulet er ikke indlæst. Åbn appen med internetforbindelse og prøv igen.');
     return;
   }
 
   try{
-    const wb=XLSX.utils.book_new();
+    const wb=createWorkbook();
+    const bytes=XLSX.write(wb,{bookType:'xlsx',type:'array',compression:true});
+    const blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const name=backupFilename();
+    const file=new File([blob],name,{type:blob.type});
 
-    const players=buildPlayersSheet();
-    const wsPlayers=sheetFromRows(players,['Nr','Navn','Rating','Kampe','Sejre','Nederlag','Winrate %','Kamp-point for','Kamp-point imod','Pointdifference','Oprettet','Spiller_ID']);
-    setColumnWidths(wsPlayers,[5,24,10,9,9,11,11,15,17,15,20,28]);
-    XLSX.utils.book_append_sheet(wb,wsPlayers,'Spillere');
-
-    const tournaments=buildTournamentsSheet();
-    const wsTournaments=sheetFromRows(tournaments,['Nr','Dato','Vinder','Spillere','Reserver','Runder','Baner','Turnerings_ID']);
-    setColumnWidths(wsTournaments,[5,20,24,10,35,8,8,30]);
-    XLSX.utils.book_append_sheet(wb,wsTournaments,'Turneringer');
-
-    const matches=flattenMatches();
-    const wsMatches=sheetFromRows(matches,['Dato','Turnerings_ID','Runde','Bane','Par 1 spiller 1','Par 1 spiller 2','Par 2 spiller 1','Par 2 spiller 2','Par 1 point','Par 2 point','Gemt','Kamp_ID']);
-    setColumnWidths(wsMatches,[20,30,8,8,22,22,22,22,12,12,8,30]);
-    XLSX.utils.book_append_sheet(wb,wsMatches,'Kampe');
-
-    const results=buildResultsSheet();
-    const wsResults=sheetFromRows(results,['Spiller','Dato','Turnerings_ID','Runde','Bane','Resultat','Point for','Point imod','Ratingændring','Kamp_ID','Spiller_ID']);
-    setColumnWidths(wsResults,[24,20,30,8,8,12,11,12,14,30,28]);
-    XLSX.utils.book_append_sheet(wb,wsResults,'Resultater');
-
-    const payload=JSON.stringify(buildBackupState());
-    const chunkSize=30000;
-    const chunks=[];
-    for(let i=0;i<payload.length;i+=chunkSize){
-      chunks.push({Del:(i/chunkSize)+1,Data:payload.slice(i,i+chunkSize)});
+    // På iPhone/iPad og installeret PWA er delingsarket den mest stabile måde
+    // at gemme en genereret fil på. Her kan brugeren vælge "Gem i Arkiver".
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'Padel sikkerhedskopi',text:'Excel-sikkerhedskopi af Padel Matchmaker'});
+      return;
     }
-    const wsBackup=XLSX.utils.json_to_sheet(chunks,{header:['Del','Data']});
-    XLSX.utils.book_append_sheet(wb,wsBackup,'BACKUP_DATA');
-    wb.Workbook=wb.Workbook||{};
-    wb.Workbook.Sheets=wb.SheetNames.map(name=>({name,Hidden:name==='BACKUP_DATA'?2:0}));
 
-    const date=new Date();
-    const y=date.getFullYear();
-    const m=String(date.getMonth()+1).padStart(2,'0');
-    const d=String(date.getDate()).padStart(2,'0');
-    const hh=String(date.getHours()).padStart(2,'0');
-    const mm=String(date.getMinutes()).padStart(2,'0');
-    XLSX.writeFile(wb,`Padel-sikkerhedskopi-${y}-${m}-${d}-${hh}${mm}.xlsx`,{compression:true});
+    // Desktop og browsere med almindelig download-understøttelse.
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=name;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},3000);
   }catch(error){
-    console.error(error);
-    alert('Sikkerhedskopien kunne ikke oprettes. Prøv igen.');
+    if(error&&error.name==='AbortError')return;
+    console.error('Excel export fejl:',error);
+    alert('Excel-filen kunne ikke oprettes. Genindlæs appen og prøv igen.');
   }
 }
 
 function importData(){
   if(typeof XLSX==='undefined'){
-    alert('Excel-funktionen kunne ikke indlæses. Kontrollér internetforbindelsen og genindlæs appen.');
+    alert('Excel-modulet er ikke indlæst. Åbn appen med internetforbindelse og prøv igen.');
     return;
   }
-
   let input=document.getElementById('excelBackupInput');
   if(!input){
     input=document.createElement('input');
     input.id='excelBackupInput';
     input.type='file';
-    input.accept='.xlsx,.xls';
+    input.accept='.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     input.style.display='none';
     document.body.appendChild(input);
     input.addEventListener('change',handleBackupFile);
@@ -232,7 +244,6 @@ function handleBackupFile(event){
       const payload=rows.sort((a,b)=>Number(a.Del)-Number(b.Del)).map(r=>String(r.Data||'')).join('');
       const backup=JSON.parse(payload);
       if(backup.format!==BACKUP_FORMAT||!backup.state||!Array.isArray(backup.state.squad))throw new Error('Ugyldigt backupformat');
-
       const state=backup.state;
       const exported=backup.exportedAt?excelDate(backup.exportedAt):'ukendt dato';
       if(!confirm(`Importér sikkerhedskopi fra ${exported}?\n\nDen nuværende database i appen erstattes. Gem eventuelt først en ny sikkerhedskopi af de nuværende data.`))return;
@@ -249,15 +260,10 @@ function handleBackupFile(event){
       tournamentHistory=state.tournamentHistory||[];
       selectedProfileId=state.selectedProfileId||null;
       profileReturnView=state.profileReturnView||'squadView';
-
-      migratePlayers();
-      cleanInvalidReferences();
-      saveState();
-      updateUI();
-      showView('homeView');
+      migratePlayers();cleanInvalidReferences();saveState();updateUI();showView('homeView');
       alert(`Sikkerhedskopien er indlæst. ${squad.length} spillere og ${tournamentHistory.length} gemte turneringer er gendannet.`);
     }catch(error){
-      console.error(error);
+      console.error('Excel import fejl:',error);
       alert('Filen kunne ikke importeres. Vælg en Excel-sikkerhedskopi, der er eksporteret fra denne app.');
     }
   };

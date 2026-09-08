@@ -1,7 +1,7 @@
 let leaderboardMode=localStorage.getItem('padelLeaderboardMode')||'tonight';
 let deferredInstallPrompt=null;
 
-function courtLabel(court){return ({1:'B10',2:'B11',3:'B12',4:'B13',5:'B14'})[court]||('B'+court);}
+function courtLabel(court){return ({1:'B10',2:'B11',3:'B12',4:'B13',5:'B9'})[court]||('B'+court);}
 function getTonightRatingChange(player){return getTonightResults(player).reduce((sum,result)=>sum+(Number(result.ratingChange)||0),0);}
 function getOverallPointDiff(player){return (player.matchPointsFor||0)-(player.matchPointsAgainst||0);}
 function getOverallWinRate(player){return player.games?Math.round((player.wins/player.games)*100):0;}

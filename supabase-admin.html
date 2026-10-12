@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Padel – Supabase klargøring</title>
+<style>body{font:16px system-ui,sans-serif;max-width:680px;margin:30px auto;padding:0 18px;background:#f6faf8;color:#17332b}section{background:white;padding:20px;margin:16px 0;border-radius:12px;border:1px solid #dce8e2}input,button{font:inherit;padding:11px;margin:6px 0;width:100%;box-sizing:border-box}button{background:#176e52;color:white;border:0;border-radius:8px;cursor:pointer}button:disabled{opacity:.5}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#edf5f0;padding:12px;border-radius:8px}small{color:#56665f}</style></head>
+<body><h1>🎾 Padel – sikker klargøring</h1><p>Dette er et separat testværktøj. Det ændrer ikke den almindelige padelapp eller data i Supabase.</p>
+<section><h2>1. Lokal sikkerhedskopi</h2><p>Åbn denne side i <strong>samme browser og på samme enhed</strong>, hvor dine eksisterende spillere ligger.</p><button id="backup">Download lokal sikkerhedskopi (JSON)</button><pre id="localStatus">Ikke undersøgt endnu.</pre></section>
+<section><h2>2. Test administratorlogin</h2><label>E-mail<input id="email" type="email" autocomplete="username"></label><label>Adgangskode<input id="password" type="password" autocomplete="current-password"></label><button id="login">Test login og adgang</button><pre id="remoteStatus">Ikke testet endnu.</pre><small>Adgangskoden sendes direkte fra browseren til Supabase og gemmes ikke i dette værktøj. Ingen data uploades.</small></section>
+<script>
+'use strict';
+const PROJECT='https://spukhyzmfeseggvutifz.supabase.co';
+const KEY='sb_publishable_ON2uLdmVaQEjXGUjTDkZbw_d6uW54BZ';
+const STORAGE='padelMatchmakerVersion7', LEGACY='padelMatchmakerVersion5';
+const localStatus=document.getElementById('localStatus'), remoteStatus=document.getElementById('remoteStatus');
+function localData(){const raw=localStorage.getItem(STORAGE)||localStorage.getItem(LEGACY);if(!raw)throw Error('Ingen lokale turneringsdata fundet. Åbn siden i den browser, hvor data er gemt.');const state=JSON.parse(raw);if(!Array.isArray(state.squad)||!Array.isArray(state.rounds))throw Error('Lokale data har uventet format.');return state;}
+document.getElementById('backup').onclick=()=>{
+ try{const data=localData();const payload={format:'padel-local-backup-v1',exportedAt:new Date().toISOString(),state:data};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='padel-sikkerhedskopi-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);localStatus.textContent='Sikkerhedskopi hentet. Spillere: '+data.squad.length+'. Historiske turneringer: '+(data.tournamentHistory||[]).length+'. Gem filen sikkert.';}catch(e){localStatus.textContent=e.message;}
+};
+document.getElementById('login').onclick=async()=>{
+ const button=document.getElementById('login');button.disabled=true;remoteStatus.textContent='Kontrollerer adgang...';
+ try{
+  const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value;
+  if(!email||!password)throw Error('Indtast e-mail og adgangskode.');
+  const response=await fetch(PROJECT+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify({email,password})});
+  const auth=await response.json();document.getElementById('password').value='';
+  if(!response.ok||!auth.access_token)throw Error('Login afvist. Kontrollér e-mail, adgangskode og at brugeren er oprettet i Authentication.');
+  const headers={apikey:KEY,Authorization:'Bearer '+auth.access_token};
+  const check=await fetch(PROJECT+'/rest/v1/padel_admins?select=user_id&limit=1',{headers});
+  if(!check.ok)throw Error('Login virker, men administratorrettigheder kunne ikke kontrolleres (HTTP '+check.status+').');
+  const admins=await check.json();
+  if(!admins.length)throw Error('Login virker, men brugeren er ikke registreret i padel_admins.');
+  const state=await fetch(PROJECT+'/rest/v1/padel_state?select=version,updated_at&id=eq.main',{headers});
+  if(!state.ok)throw Error('Administrator er godkendt, men læsning af padel_state fejlede (HTTP '+state.status+').');
+  const rows=await state.json();
+  remoteStatus.textContent='✓ Administratorlogin godkendt. '+(rows.length?'Supabase indeholder allerede data (version '+rows[0].version+'). Ingen ændringer foretaget.':'Supabase er endnu tom. Ingen ændringer foretaget.');
+ }catch(e){remoteStatus.textContent='Status: '+e.message;}finally{button.disabled=false;}
+};
+try{const s=localData();localStatus.textContent='Lokale data fundet: '+s.squad.length+' spillere og '+(s.tournamentHistory||[]).length+' historiske turneringer. Download sikkerhedskopi før næste trin.';}catch(e){localStatus.textContent=e.message;}
+</script></body></html>

@@ -6,6 +6,7 @@
 <section><h2>2. Test administratorlogin</h2><label>E-mail<input id="email" type="email" autocomplete="username"></label><label>Adgangskode<input id="password" type="password" autocomplete="current-password"></label><button id="login">Test login og adgang</button><pre id="remoteStatus">Ikke testet endnu.</pre><small>Adgangskoden sendes direkte fra browseren til Supabase og gemmes ikke i dette værktøj. Ingen data uploades.</small></section>
 <section><h2>3. Overfør sikkerhedskopi</h2><p>Vælg din downloadede JSON-fil. Import kræver godkendt administratorlogin og en tom database.</p><input type="file" id="backupFile" accept=".json,application/json"><pre id="importStatus">Ingen fil valgt.</pre><button id="upload" disabled>Overfør til Supabase</button><small>Den almindelige padelapp ændres ikke.</small></section>
 <section><h2>4. Kontrol af fælles data</h2><p>Efter administratorlogin kan du hente en frisk oversigt direkte fra Supabase. Dette ændrer ingen data.</p><button id="refreshCloud" disabled>Hent data fra Supabase</button><pre id="cloudStatus">Log ind for at hente data.</pre></section>
+<section><h2>5. Fælles spillerkode</h2><p>Vælg en kode på mindst 12 tegn. Koden gemmes kun som en hash i Supabase. Du kan ændre den her senere.</p><input id="playerCodeNew" type="password" minlength="12" placeholder="Ny fælles spillerkode"><button id="setPlayerCode" disabled>Gem fælles spillerkode</button><pre id="playerCodeStatus">Log ind som administrator først.</pre></section>
 <script>
 'use strict';
 const PROJECT='https://spukhyzmfeseggvutifz.supabase.co';
@@ -20,7 +21,7 @@ document.getElementById('backup').onclick=()=>{
 document.getElementById('login').onclick=async()=>{
  const button=document.getElementById('login');button.disabled=true;remoteStatus.textContent='Kontrollerer adgang...';
  try{
-  adminToken=null;document.getElementById('upload').disabled=true;document.getElementById('refreshCloud').disabled=true;
+  adminToken=null;document.getElementById('upload').disabled=true;document.getElementById('refreshCloud').disabled=true;document.getElementById('setPlayerCode').disabled=true;
   const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value;
   if(!email||!password)throw Error('Indtast e-mail og adgangskode.');
   const response=await fetch(PROJECT+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify({email,password})});
@@ -34,7 +35,7 @@ document.getElementById('login').onclick=async()=>{
   const state=await fetch(PROJECT+'/rest/v1/padel_state?select=version,updated_at&id=eq.main',{headers});
   if(!state.ok)throw Error('Administrator er godkendt, men læsning af padel_state fejlede (HTTP '+state.status+').');
   const rows=await state.json();
-  adminToken=auth.access_token;document.getElementById('upload').disabled=!selectedState;document.getElementById('refreshCloud').disabled=false;
+  adminToken=auth.access_token;document.getElementById('upload').disabled=!selectedState;document.getElementById('refreshCloud').disabled=false;document.getElementById('setPlayerCode').disabled=false;
   remoteStatus.textContent='✓ Administratorlogin godkendt. '+(rows.length?'Supabase indeholder allerede data (version '+rows[0].version+'). Ingen ændringer foretaget.':'Supabase er endnu tom. Ingen ændringer foretaget.');
  }catch(e){remoteStatus.textContent='Status: '+e.message;}finally{button.disabled=false;}
 };
@@ -91,5 +92,19 @@ document.getElementById('refreshCloud').onclick=async()=>{
   const row=rows[0],data=row.data||{};
   out.textContent='✓ Data læst fra Supabase.\nVersion: '+row.version+'\nSpillere: '+(data.squad||[]).length+'\nHistoriske turneringer: '+(data.tournamentHistory||[]).length+'\nAktive runder: '+(data.rounds||[]).length+'\nSidst gemt: '+row.updated_at+'\n\nIngen data er ændret.';
  }catch(err){out.textContent='Fejl: '+err.message;}
+};
+
+document.getElementById('setPlayerCode').onclick=async()=>{
+ const out=document.getElementById('playerCodeStatus'),input=document.getElementById('playerCodeNew'),code=input.value;
+ if(!adminToken){out.textContent='Log ind først.';return;}
+ if(code.length<12){out.textContent='Brug mindst 12 tegn.';return;}
+ if(!confirm('Vil du aktivere/ændre den fælles spillerkode? Den tidligere kode stopper straks med at virke.'))return;
+ const btn=document.getElementById('setPlayerCode');btn.disabled=true;
+ try{
+  const res=await fetch(PROJECT+'/rest/v1/rpc/padel_admin_set_player_code',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+adminToken,'Content-Type':'application/json'},body:JSON.stringify({p_code:code})});
+  if(!res.ok)throw Error('Supabase afviste koden (HTTP '+res.status+'): '+(await res.text()).slice(0,250));
+  input.value='';out.textContent='✓ Fælles spillerkode er gemt sikkert. Del koden direkte med spillerne.';
+ }catch(err){out.textContent='Fejl: '+err.message+'\nHar du kørt SQL-script 03 i Supabase?';}
+ finally{btn.disabled=false;}
 };
 </script></body></html>

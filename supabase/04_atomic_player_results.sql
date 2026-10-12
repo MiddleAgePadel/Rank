@@ -121,7 +121,7 @@ begin
    );
    v_player := jsonb_set(v_player,'{ratingPoints}',to_jsonb(coalesce((v_player->>'ratingPoints')::integer,500)+v_delta));
    v_player := jsonb_set(v_player,'{games}',to_jsonb(coalesce((v_player->>'games')::integer,0)+1));
-   v_player := jsonb_set(v_player,case when v_won then '{wins}' else '{losses}' end,
+   v_player := jsonb_set(v_player,(case when v_won then '{wins}' else '{losses}' end)::text[],
       to_jsonb(coalesce((v_player->>case when v_won then 'wins' else 'losses' end)::integer,0)+1));
    v_player := jsonb_set(v_player,'{matchPointsFor}',to_jsonb(coalesce((v_player->>'matchPointsFor')::integer,0)+v_score_for));
    v_player := jsonb_set(v_player,'{matchPointsAgainst}',to_jsonb(coalesce((v_player->>'matchPointsAgainst')::integer,0)+v_score_against));

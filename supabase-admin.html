@@ -4,11 +4,13 @@
 <body><h1>🎾 Padel – sikker klargøring</h1><p>Dette er et separat testværktøj. Det ændrer ikke den almindelige padelapp eller data i Supabase.</p>
 <section><h2>1. Lokal sikkerhedskopi</h2><p>Åbn denne side i <strong>samme browser og på samme enhed</strong>, hvor dine eksisterende spillere ligger.</p><button id="backup">Download lokal sikkerhedskopi (JSON)</button><pre id="localStatus">Ikke undersøgt endnu.</pre></section>
 <section><h2>2. Test administratorlogin</h2><label>E-mail<input id="email" type="email" autocomplete="username"></label><label>Adgangskode<input id="password" type="password" autocomplete="current-password"></label><button id="login">Test login og adgang</button><pre id="remoteStatus">Ikke testet endnu.</pre><small>Adgangskoden sendes direkte fra browseren til Supabase og gemmes ikke i dette værktøj. Ingen data uploades.</small></section>
+<section><h2>3. Overfør sikkerhedskopi</h2><p>Vælg din downloadede JSON-fil. Import kræver godkendt administratorlogin og en tom database.</p><input type="file" id="backupFile" accept=".json,application/json"><pre id="importStatus">Ingen fil valgt.</pre><button id="upload" disabled>Overfør til Supabase</button><small>Den almindelige padelapp ændres ikke.</small></section>
 <script>
 'use strict';
 const PROJECT='https://spukhyzmfeseggvutifz.supabase.co';
 const KEY='sb_publishable_ON2uLdmVaQEjXGUjTDkZbw_d6uW54BZ';
 const STORAGE='padelMatchmakerVersion7', LEGACY='padelMatchmakerVersion5';
+let adminToken=null, selectedState=null;
 const localStatus=document.getElementById('localStatus'), remoteStatus=document.getElementById('remoteStatus');
 function localData(){const raw=localStorage.getItem(STORAGE)||localStorage.getItem(LEGACY);if(!raw)throw Error('Ingen lokale turneringsdata fundet. Åbn siden i den browser, hvor data er gemt.');const state=JSON.parse(raw);if(!Array.isArray(state.squad)||!Array.isArray(state.rounds))throw Error('Lokale data har uventet format.');return state;}
 document.getElementById('backup').onclick=()=>{
@@ -17,6 +19,7 @@ document.getElementById('backup').onclick=()=>{
 document.getElementById('login').onclick=async()=>{
  const button=document.getElementById('login');button.disabled=true;remoteStatus.textContent='Kontrollerer adgang...';
  try{
+  adminToken=null;document.getElementById('upload').disabled=true;
   const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value;
   if(!email||!password)throw Error('Indtast e-mail og adgangskode.');
   const response=await fetch(PROJECT+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify({email,password})});
@@ -30,8 +33,48 @@ document.getElementById('login').onclick=async()=>{
   const state=await fetch(PROJECT+'/rest/v1/padel_state?select=version,updated_at&id=eq.main',{headers});
   if(!state.ok)throw Error('Administrator er godkendt, men læsning af padel_state fejlede (HTTP '+state.status+').');
   const rows=await state.json();
+  adminToken=auth.access_token;document.getElementById('upload').disabled=!selectedState;
   remoteStatus.textContent='✓ Administratorlogin godkendt. '+(rows.length?'Supabase indeholder allerede data (version '+rows[0].version+'). Ingen ændringer foretaget.':'Supabase er endnu tom. Ingen ændringer foretaget.');
  }catch(e){remoteStatus.textContent='Status: '+e.message;}finally{button.disabled=false;}
 };
 try{const s=localData();localStatus.textContent='Lokale data fundet: '+s.squad.length+' spillere og '+(s.tournamentHistory||[]).length+' historiske turneringer. Download sikkerhedskopi før næste trin.';}catch(e){localStatus.textContent=e.message;}
+
+const importStatus=document.getElementById('importStatus');
+document.getElementById('backupFile').onchange=async event=>{
+ selectedState=null;document.getElementById('upload').disabled=true;
+ try{
+  const file=event.target.files[0];if(!file)throw Error('Vælg en fil.');
+  if(file.size>8*1024*1024)throw Error('Filen er større end 8 MB.');
+  const backup=JSON.parse(await file.text());
+  if(backup.format!=='padel-local-backup-v1')throw Error('Vælg JSON-sikkerhedskopien fra denne side.');
+  const state=backup.state;
+  if(!state||!Array.isArray(state.squad)||!Array.isArray(state.rounds)||!Array.isArray(state.tournamentHistory)||!Array.isArray(state.tonightIds)||!Array.isArray(state.reserveIds))throw Error('Ufuldstændige turneringsdata.');
+  if(state.squad.some(p=>!p||typeof p.id!=='string'||typeof p.name!=='string'||!Number.isFinite(p.ratingPoints)))throw Error('Ugyldige spillerdata.');
+  if(new Set(state.squad.map(p=>p.id)).size!==state.squad.length)throw Error('Dublerede spiller-ID.');
+  selectedState=state;
+  importStatus.textContent='Klar til import: '+state.squad.length+' spillere, '+state.rounds.length+' runder og '+state.tournamentHistory.length+' historiske turneringer.';
+  document.getElementById('upload').disabled=!adminToken;
+ }catch(err){importStatus.textContent='Fejl: '+err.message;}
+};
+document.getElementById('upload').onclick=async()=>{
+ const button=document.getElementById('upload');button.disabled=true;
+ try{
+  if(!adminToken||!selectedState)throw Error('Log ind og vælg filen først.');
+  const headers={apikey:KEY,Authorization:'Bearer '+adminToken};
+  const check=await fetch(PROJECT+'/rest/v1/padel_state?select=version&id=eq.main',{headers,cache:'no-store'});
+  if(!check.ok)throw Error('Kan ikke kontrollere databasen (HTTP '+check.status+').');
+  if((await check.json()).length)throw Error('Databasen indeholder allerede data. Intet er ændret.');
+  const state=selectedState;
+  if(!confirm('Overfør '+state.squad.length+' spillere og '+state.tournamentHistory.length+' historiske turneringer til Supabase?')){importStatus.textContent='Annulleret.';return;}
+  importStatus.textContent='Overfører...';
+  const res=await fetch(PROJECT+'/rest/v1/rpc/padel_admin_save_state',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({p_data:state,p_expected_version:0})});
+  if(!res.ok)throw Error('Supabase afviste importen (HTTP '+res.status+'): '+(await res.text()).slice(0,250));
+  const version=await res.json();
+  const verify=await fetch(PROJECT+'/rest/v1/padel_state?select=version,data&id=eq.main',{headers,cache:'no-store'});
+  if(!verify.ok)throw Error('Data blev gemt, men efterkontrol fejlede. Importér IKKE igen.');
+  const rows=await verify.json(),stored=rows[0];
+  if(rows.length!==1||stored.version!==version||stored.data.squad?.length!==state.squad.length||stored.data.rounds?.length!==state.rounds.length||stored.data.tournamentHistory?.length!==state.tournamentHistory.length)throw Error('Efterkontrol stemmer ikke. Importér IKKE igen.');
+  importStatus.textContent='✓ Data overført og kontrolleret! Version '+version+'. '+state.squad.length+' spillere, '+state.tournamentHistory.length+' historiske turneringer. Behold din backup.';
+ }catch(err){importStatus.textContent='Status: '+err.message;}finally{button.disabled=false;}
+};
 </script></body></html>

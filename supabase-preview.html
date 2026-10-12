@@ -1,14 +1,24 @@
 <!doctype html>
 <html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MiddleAgePadel – fælles testvisning</title>
-<style>body{font:16px system-ui,sans-serif;margin:0;background:#061817;color:#eef7f2}main{max-width:900px;margin:auto;padding:20px}h1{margin-bottom:5px}p{line-height:1.5}.muted{color:#afc9bc}.card{border:1px solid #31574b;border-radius:14px;padding:15px;margin:12px 0;background:#102a22}button{background:#2b8d69;color:white;border:0;border-radius:9px;padding:12px 18px;font:inherit;cursor:pointer}input{width:100%;box-sizing:border-box;font:inherit;padding:12px;margin:6px 0 12px;border-radius:8px}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid #31574b}th:last-child,td:last-child{text-align:right}.hidden{display:none}.teams{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}small{color:#afc9bc}</style></head><body><main>
+<style>body{font:16px system-ui,sans-serif;margin:0;background:#061817;color:#eef7f2}main{max-width:900px;margin:auto;padding:20px}h1{margin-bottom:5px}p{line-height:1.5}.muted{color:#afc9bc}.card{border:1px solid #31574b;border-radius:14px;padding:15px;margin:12px 0;background:#102a22}button{background:#2b8d69;color:white;border:0;border-radius:9px;padding:12px 18px;font:inherit;cursor:pointer}input{width:100%;box-sizing:border-box;font:inherit;padding:12px;margin:6px 0 12px;border-radius:8px}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid #31574b}th:last-child,td:last-child{text-align:right}.hidden{display:none}.teams{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}small{color:#afc9bc}.nav{display:flex;gap:7px;overflow-x:auto;padding:5px 0 12px}.nav button{flex:0 0 auto;background:#174637}.nav button.active{background:#2b8d69;font-weight:700}.court{font-size:1.15rem}.teams{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}.teams span{overflow-wrap:anywhere}.match-result{font-size:1.35rem}.summary{display:flex;gap:10px;flex-wrap:wrap}.summary span{padding:8px 12px;background:#174637;border-radius:8px}@media(max-width:520px){main{padding:12px}.card{padding:12px}th,td{padding:7px 4px;font-size:14px}.teams{gap:5px;font-size:14px}.match-result{font-size:17px}}</style></head><body><main>
 <h1>🎾 MiddleAgePadel</h1><p class="muted">Testversion · læser fra Supabase · ingen ændringer i data</p>
 <div class="card" id="loginPanel"><h2>Administratorlogin</h2><label>E-mail<input id="email" type="email" autocomplete="username"></label><label>Adgangskode<input id="password" type="password" autocomplete="current-password"></label><button id="login">Log ind og vis fælles data</button><p id="message" role="status"></p></div>
-<div class="card" id="playerPanel"><h2>Spilleradgang (test)</h2><p>Brug den fælles spillerkode. Du kan kun se data, ikke ændre resultater.</p><label>Fælles spillerkode<input id="playerCode" type="password" autocomplete="off"></label><button id="playerLogin">Vis rangliste og kampe</button><p id="playerMessage" role="status"></p></div><div id="content" class="hidden"><div class="card"><button id="refresh">Opdatér fra Supabase</button><button id="logout">Log ud</button><p id="status"></p></div><div class="card"><h2>Rangliste · samlet</h2><div id="leaderboard"></div></div><div class="card"><h2>Aktuelle kampe</h2><div id="matches"></div></div><div class="card"><h2>Turneringshistorik</h2><div id="history"></div></div></div>
-<p><small>Kun administrator kan åbne denne testvisning. Fælles spilleradgang kommer i næste fase. Dine data ændres ikke.</small></p>
+<div class="card" id="playerPanel"><h2>Spilleradgang (test)</h2><p>Brug den fælles spillerkode. Du kan kun se data, ikke ændre resultater.</p><label>Fælles spillerkode<input id="playerCode" type="password" autocomplete="off"></label><button id="playerLogin">Vis rangliste og kampe</button><p id="playerMessage" role="status"></p></div><div id="content" class="hidden">
+<div class="card"><div class="summary"><span id="modeLabel">Testvisning</span><span id="overview">Henter data…</span></div><p id="status" class="muted"></p><button id="refresh">Opdatér fra Supabase</button> <button id="logout">Log ud</button></div>
+<nav class="nav" aria-label="Visninger"><button class="active" data-view="matchesView">Aftenens kampe</button><button data-view="tonightView">Aftenens rangliste</button><button data-view="overallView">Samlet rangliste</button><button data-view="historyView">Historik</button></nav>
+<section id="matchesView" class="card"><h2>🎾 Aftenens kampe</h2><p class="muted">Se bane, makker og modstandere. Resultater kan endnu ikke gemmes i testversionen.</p><div id="matches"></div></section>
+<section id="tonightView" class="card hidden"><h2>Aftenens rangliste</h2><div id="tonightLeaderboard"></div></section>
+<section id="overallView" class="card hidden"><h2>Samlet rangliste</h2><div id="leaderboard"></div></section>
+<section id="historyView" class="card hidden"><h2>Turneringshistorik</h2><div id="history"></div></section>
+</div>
+<p><small>Skrivebeskyttet testversion. Dine spillerdata og den oprindelige app ændres ikke.</small></p>
 </main><script>
 'use strict';
 const URL='https://spukhyzmfeseggvutifz.supabase.co', KEY='sb_publishable_ON2uLdmVaQEjXGUjTDkZbw_d6uW54BZ';
 let token=null,playerCode=null;
+const views=['matchesView','tonightView','overallView','historyView'];
+function showTab(id){views.forEach(v=>byId(v).classList.toggle('hidden',v!==id));document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===id);b.setAttribute('aria-current',b.dataset.view===id?'page':'false')});}
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>showTab(b.dataset.view));
 const byId=id=>document.getElementById(id);
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 async function load(){
@@ -25,12 +35,17 @@ async function load(){
   row=rows[0];
  }
  const s=row.data,players=Array.isArray(s.squad)?s.squad:[],map=new Map(players.map(p=>[p.id,p]));
+ byId('modeLabel').textContent=playerCode?'Spilleradgang':'Administrator';
+ byId('overview').textContent=players.length+' spillere · '+(s.tournamentHistory||[]).length+' turneringer';
  byId('status').textContent='Databaseversion '+row.version+' · '+players.length+' spillere · '+(s.tournamentHistory||[]).length+' historiske turneringer · sidst gemt '+new Date(row.updated_at).toLocaleString('da-DK');
  const sorted=[...players].sort((a,b)=>(b.ratingPoints||0)-(a.ratingPoints||0)||a.name.localeCompare(b.name,'da'));
  byId('leaderboard').innerHTML='<table><thead><tr><th>Nr.</th><th>Spiller</th><th>Kampe</th><th>Rating</th></tr></thead><tbody>'+sorted.map((p,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(p.name)+'</td><td>'+Number(p.games||0)+'</td><td>'+Number(p.ratingPoints||0)+'</td></tr>').join('')+'</tbody></table>';
+ const tonightIds=Array.isArray(s.tonightIds)?s.tonightIds:[],tonight=tonightIds.map(id=>map.get(id)).filter(Boolean);
+ const tonightSorted=tonight.sort((a,b)=>(b.ratingPoints||0)-(a.ratingPoints||0)||(b.wins||0)-(a.wins||0)||a.name.localeCompare(b.name,'da'));
+ byId('tonightLeaderboard').innerHTML=tonightSorted.length?'<p class="muted">Deltagere i den aktuelle turnering · sorteret efter samlet rating. Aftenens pointberegning tilføjes i næste version.</p><table><thead><tr><th>Nr.</th><th>Spiller</th><th>Rating</th></tr></thead><tbody>'+tonightSorted.map((p,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(p.name)+'</td><td>'+Number(p.ratingPoints||0)+'</td></tr>').join('')+'</tbody></table>':'Ingen aktiv turnering eller udvalgte spillere.';
  const courts={1:'B10',2:'B11',3:'B12',4:'B13',5:'B9'};
  const rounds=Array.isArray(s.rounds)?s.rounds:[],round=rounds.find(r=>r.roundNumber===s.currentRound)||rounds[rounds.length-1];
- byId('matches').innerHTML=round?.matches?.length?round.matches.map(m=>'<div class="card"><strong>Bane '+esc(courts[m.court]||m.court)+'</strong> · Runde '+Number(round.roundNumber)+'<div class="teams"><span>'+esc((m.teamA||[]).map(id=>map.get(id)?.name||'?').join(' / '))+'</span><strong>'+(m.saved?esc(m.scoreA)+'–'+esc(m.scoreB):'mod')+'</strong><span>'+esc((m.teamB||[]).map(id=>map.get(id)?.name||'?').join(' / '))+'</span></div></div>').join(''):'Ingen aktive kampe.';
+ byId('matches').innerHTML=round?.matches?.length?round.matches.map(m=>'<div class="card"><strong>Bane '+esc(courts[m.court]||m.court)+'</strong> · Runde '+Number(round.roundNumber)+'<div class="teams"><span>'+esc((m.teamA||[]).map(id=>map.get(id)?.name||'?').join(' / '))+'</span><strong>'+(m.saved?esc(m.scoreA)+'–'+esc(m.scoreB):'mod')+'</strong><span>'+esc((m.teamB||[]).map(id=>map.get(id)?.name||'?').join(' / '))+'</span></div></div>').join('') :'<p class="muted">Ingen aktive kampe lige nu. Når administrator opretter en runde, vises baner og hold her.</p>';
  const history=Array.isArray(s.tournamentHistory)?s.tournamentHistory:[];
  byId('history').innerHTML=history.length?history.map(t=>'<div class="card">'+esc(t.date?new Date(t.date).toLocaleDateString('da-DK'):'Ukendt dato')+' · Vinder: '+esc(t.winner||'–')+'</div>').join(''):'Ingen historiske turneringer.';
 }
@@ -39,7 +54,7 @@ byId('login').onclick=async()=>{
  try{
   const res=await fetch(URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email:byId('email').value.trim(),password:byId('password').value})});
   const auth=await res.json();byId('password').value='';if(!res.ok||!auth.access_token)throw Error('Login mislykkedes.');
-  token=auth.access_token;playerCode=null;await load();byId('playerPanel').classList.add('hidden');byId('loginPanel').classList.add('hidden');byId('content').classList.remove('hidden');byId('message').textContent='';
+  token=auth.access_token;playerCode=null;await load();byId('playerPanel').classList.add('hidden');byId('loginPanel').classList.add('hidden');byId('content').classList.remove('hidden');byId('message').textContent='';showTab('matchesView');
  }catch(e){token=null;byId('message').textContent=e.message;}finally{button.disabled=false;}
 };
 byId('refresh').onclick=async()=>{try{await load();}catch(e){byId('status').textContent=e.message;}};
@@ -50,7 +65,7 @@ byId('playerLogin').onclick=async()=>{
   const code=byId('playerCode').value;
   if(!code)throw Error('Indtast spillerkoden.');
   token=null;playerCode=code;await load();
-  byId('playerCode').value='';byId('playerPanel').classList.add('hidden');byId('loginPanel').classList.add('hidden');byId('content').classList.remove('hidden');byId('playerMessage').textContent='';
+  byId('playerCode').value='';byId('playerPanel').classList.add('hidden');byId('loginPanel').classList.add('hidden');byId('content').classList.remove('hidden');byId('playerMessage').textContent='';showTab('matchesView');
  }catch(err){playerCode=null;byId('playerMessage').textContent=err.message;}
  finally{button.disabled=false;}
 };

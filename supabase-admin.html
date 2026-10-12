@@ -5,6 +5,7 @@
 <section><h2>1. Lokal sikkerhedskopi</h2><p>Åbn denne side i <strong>samme browser og på samme enhed</strong>, hvor dine eksisterende spillere ligger.</p><button id="backup">Download lokal sikkerhedskopi (JSON)</button><pre id="localStatus">Ikke undersøgt endnu.</pre></section>
 <section><h2>2. Test administratorlogin</h2><label>E-mail<input id="email" type="email" autocomplete="username"></label><label>Adgangskode<input id="password" type="password" autocomplete="current-password"></label><button id="login">Test login og adgang</button><pre id="remoteStatus">Ikke testet endnu.</pre><small>Adgangskoden sendes direkte fra browseren til Supabase og gemmes ikke i dette værktøj. Ingen data uploades.</small></section>
 <section><h2>3. Overfør sikkerhedskopi</h2><p>Vælg din downloadede JSON-fil. Import kræver godkendt administratorlogin og en tom database.</p><input type="file" id="backupFile" accept=".json,application/json"><pre id="importStatus">Ingen fil valgt.</pre><button id="upload" disabled>Overfør til Supabase</button><small>Den almindelige padelapp ændres ikke.</small></section>
+<section><h2>4. Kontrol af fælles data</h2><p>Efter administratorlogin kan du hente en frisk oversigt direkte fra Supabase. Dette ændrer ingen data.</p><button id="refreshCloud" disabled>Hent data fra Supabase</button><pre id="cloudStatus">Log ind for at hente data.</pre></section>
 <script>
 'use strict';
 const PROJECT='https://spukhyzmfeseggvutifz.supabase.co';
@@ -19,7 +20,7 @@ document.getElementById('backup').onclick=()=>{
 document.getElementById('login').onclick=async()=>{
  const button=document.getElementById('login');button.disabled=true;remoteStatus.textContent='Kontrollerer adgang...';
  try{
-  adminToken=null;document.getElementById('upload').disabled=true;
+  adminToken=null;document.getElementById('upload').disabled=true;document.getElementById('refreshCloud').disabled=true;
   const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value;
   if(!email||!password)throw Error('Indtast e-mail og adgangskode.');
   const response=await fetch(PROJECT+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify({email,password})});
@@ -33,7 +34,7 @@ document.getElementById('login').onclick=async()=>{
   const state=await fetch(PROJECT+'/rest/v1/padel_state?select=version,updated_at&id=eq.main',{headers});
   if(!state.ok)throw Error('Administrator er godkendt, men læsning af padel_state fejlede (HTTP '+state.status+').');
   const rows=await state.json();
-  adminToken=auth.access_token;document.getElementById('upload').disabled=!selectedState;
+  adminToken=auth.access_token;document.getElementById('upload').disabled=!selectedState;document.getElementById('refreshCloud').disabled=false;
   remoteStatus.textContent='✓ Administratorlogin godkendt. '+(rows.length?'Supabase indeholder allerede data (version '+rows[0].version+'). Ingen ændringer foretaget.':'Supabase er endnu tom. Ingen ændringer foretaget.');
  }catch(e){remoteStatus.textContent='Status: '+e.message;}finally{button.disabled=false;}
 };
@@ -76,5 +77,19 @@ document.getElementById('upload').onclick=async()=>{
   if(rows.length!==1||stored.version!==version||stored.data.squad?.length!==state.squad.length||stored.data.rounds?.length!==state.rounds.length||stored.data.tournamentHistory?.length!==state.tournamentHistory.length)throw Error('Efterkontrol stemmer ikke. Importér IKKE igen.');
   importStatus.textContent='✓ Data overført og kontrolleret! Version '+version+'. '+state.squad.length+' spillere, '+state.tournamentHistory.length+' historiske turneringer. Behold din backup.';
  }catch(err){importStatus.textContent='Status: '+err.message;}finally{button.disabled=false;}
+};
+
+document.getElementById('refreshCloud').onclick=async()=>{
+ const out=document.getElementById('cloudStatus');
+ try{
+  if(!adminToken)throw Error('Log ind først.');
+  out.textContent='Henter fra Supabase...';
+  const response=await fetch(PROJECT+'/rest/v1/padel_state?select=version,updated_at,data&id=eq.main',{headers:{apikey:KEY,Authorization:'Bearer '+adminToken},cache:'no-store'});
+  if(!response.ok)throw Error('Supabase svarede HTTP '+response.status);
+  const rows=await response.json();
+  if(!rows.length){out.textContent='Databasen er tom.';return;}
+  const row=rows[0],data=row.data||{};
+  out.textContent='✓ Data læst fra Supabase.\nVersion: '+row.version+'\nSpillere: '+(data.squad||[]).length+'\nHistoriske turneringer: '+(data.tournamentHistory||[]).length+'\nAktive runder: '+(data.rounds||[]).length+'\nSidst gemt: '+row.updated_at+'\n\nIngen data er ændret.';
+ }catch(err){out.textContent='Fejl: '+err.message;}
 };
 </script></body></html>

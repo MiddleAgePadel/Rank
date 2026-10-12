@@ -69,7 +69,11 @@ begin
       p:=players->k;
       p:=jsonb_set(p,'{ratingPoints}',to_jsonb((p->>'ratingPoints')::integer+delta));
       p:=jsonb_set(p,'{games}',to_jsonb((p->>'games')::integer+1));
-      p:=jsonb_set(p,(case when won then '{wins}' else '{losses}' end)::text[],to_jsonb((p->>case when won then 'wins' else 'losses' end)::integer+1));
+      if won then
+       p:=jsonb_set(p,ARRAY['wins']::text[],to_jsonb((p->>'wins')::integer+1));
+      else
+       p:=jsonb_set(p,ARRAY['losses']::text[],to_jsonb((p->>'losses')::integer+1));
+      end if;
       p:=jsonb_set(p,'{matchPointsFor}',to_jsonb((p->>'matchPointsFor')::integer+score_for));
       p:=jsonb_set(p,'{matchPointsAgainst}',to_jsonb((p->>'matchPointsAgainst')::integer+score_against));
       p:=jsonb_set(p,'{results}',p->'results'||jsonb_build_array(jsonb_build_object('matchId',p_match_id,'ratingChange',delta,'scoreFor',score_for,'scoreAgainst',score_against)));

@@ -15,7 +15,7 @@
 </main><script>
 'use strict';
 const URL='https://spukhyzmfeseggvutifz.supabase.co', KEY='sb_publishable_ON2uLdmVaQEjXGUjTDkZbw_d6uW54BZ';
-let token=null,playerCode=null;
+let token=null,playerCode=null,submittingMatch=false;
 const views=['matchesView','tonightView','overallView','historyView'];
 function showTab(id){views.forEach(v=>byId(v).classList.toggle('hidden',v!==id));document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===id);b.setAttribute('aria-current',b.dataset.view===id?'page':'false')});}
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>showTab(b.dataset.view));
@@ -45,7 +45,8 @@ async function load(){
  byId('tonightLeaderboard').innerHTML=tonightSorted.length?'<p class="muted">Deltagere i den aktuelle turnering · sorteret efter samlet rating. Aftenens pointberegning tilføjes i næste version.</p><table><thead><tr><th>Nr.</th><th>Spiller</th><th>Rating</th></tr></thead><tbody>'+tonightSorted.map((p,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(p.name)+'</td><td>'+Number(p.ratingPoints||0)+'</td></tr>').join('')+'</tbody></table>':'Ingen aktiv turnering eller udvalgte spillere.';
  const courts={1:'B10',2:'B11',3:'B12',4:'B13',5:'B9'};
  const rounds=Array.isArray(s.rounds)?s.rounds:[],round=rounds.find(r=>r.roundNumber===s.currentRound)||rounds[rounds.length-1];
- byId('matches').innerHTML=round?.matches?.length?round.matches.map(m=>'<div class="card"><strong>Bane '+esc(courts[m.court]||m.court)+'</strong> · Runde '+Number(round.roundNumber)+'<div class="teams"><span>'+esc((m.teamA||[]).map(id=>map.get(id)?.name||'?').join(' / '))+'</span><strong>'+(m.saved?esc(m.scoreA)+'–'+esc(m.scoreB):'mod')+'</strong><span>'+esc((m.teamB||[]).map(id=>map.get(id)?.name||'?').join(' / '))+'</span></div></div>').join('') :'<p class="muted">Ingen aktive kampe lige nu. Når administrator opretter en runde, vises baner og hold her.</p>';
+ byId('matches').innerHTML=round?.matches?.length?round.matches.map(m=>'<div class="card"><strong>Bane '+esc(courts[m.court]||m.court)+'</strong> · Runde '+Number(round.roundNumber)+'<div class="teams"><span>'+esc((m.teamA||[]).map(id=>map.get(id)?.name||'?').join(' / '))+'</span><strong>'+(m.saved?esc(m.scoreA)+'–'+esc(m.scoreB):'mod')+'</strong><span>'+esc((m.teamB||[]).map(id=>map.get(id)?.name||'?').join(' / '))+'</span></div>'+(m.saved?'<p class="muted">✓ Resultat gemt</p>':playerCode?'<div class="score-entry"><label>Par 1 <input type="number" min="0" max="99" inputmode="numeric" id="a-'+esc(m.id)+'"></label><label>Par 2 <input type="number" min="0" max="99" inputmode="numeric" id="b-'+esc(m.id)+'"></label><button data-save-match="'+esc(m.id)+'">Gem resultat</button></div>':'<p class="muted">Afventer resultat</p>')+'</div>').join('') :'<p class="muted">Ingen aktive kampe lige nu. Når administrator opretter en runde, vises baner og hold her.</p>';
+ document.querySelectorAll('[data-save-match]').forEach(button=>button.onclick=()=>savePlayerMatch(button.dataset.saveMatch));
  const history=Array.isArray(s.tournamentHistory)?s.tournamentHistory:[];
  byId('history').innerHTML=history.length?history.map(t=>'<div class="card">'+esc(t.date?new Date(t.date).toLocaleDateString('da-DK'):'Ukendt dato')+' · Vinder: '+esc(t.winner||'–')+'</div>').join(''):'Ingen historiske turneringer.';
 }
@@ -69,4 +70,23 @@ byId('playerLogin').onclick=async()=>{
  }catch(err){playerCode=null;byId('playerMessage').textContent=err.message;}
  finally{button.disabled=false;}
 };
+
+async function savePlayerMatch(id){
+ if(!playerCode||submittingMatch)return;
+ const a=byId('a-'+id),b=byId('b-'+id),x=Number(a?.value),y=Number(b?.value);
+ if(!a||!b||a.value===''||b.value===''||!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||x>99||y>99||x===y){alert('Indtast to hele pointtal (0–99) med en vinder.');return;}
+ if(!confirm('Gem resultatet '+x+'–'+y+'? Spillere kan ikke rette det bagefter.'))return;
+ submittingMatch=true;
+ const button=Array.from(document.querySelectorAll('[data-save-match]')).find(el=>el.dataset.saveMatch===id);
+ if(button)button.disabled=true;
+ try{
+  const response=await fetch(URL+'/rest/v1/rpc/padel_player_save_match',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({p_code:playerCode,p_match_id:id,p_score_a:x,p_score_b:y})});
+  if(!response.ok){
+   const err=await response.json().catch(()=>({}));
+   throw Error(response.status===404?'Resultatfunktionen mangler i Supabase. Kør SQL-script 04.':err.message||'Resultatet blev afvist.');
+  }
+  await load();alert('✓ Resultatet er gemt i Supabase.');
+ }catch(err){alert('Resultat ikke bekræftet: '+err.message+'\nOpdatér før du forsøger igen.');try{await load();}catch{}}
+ finally{submittingMatch=false;if(button)button.disabled=false;}
+}
 </script></body></html>

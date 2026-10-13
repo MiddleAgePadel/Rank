@@ -283,7 +283,7 @@ begin
  end if;
  return v_data;
 end;
-$;
+$$;
 
 revoke all on function public.padel_v17_auto_next_round() from public,anon,authenticated;
 revoke all on function public.padel_v17_auto_finish() from public,anon,authenticated;

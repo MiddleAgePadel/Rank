@@ -1,4 +1,5 @@
--- SQL 22: Isoleret sammenligning af v11 og v13; kun laesning af kampdata.\nbegin;
+-- SQL 22: Isoleret sammenligning af v11 og v13; kun laesning af kampdata.
+begin;
 create or replace function public.padel_test_v13_cost(p_ids text[],p_ratings jsonb,p_previous text[],p_earlier text[],p_opponents text[])
 returns bigint language plpgsql immutable set search_path='' as $
 declare i integer; n integer; a text; b text; key_pair text; gap integer; max_gap integer:=0; sum_gap integer:=0; repeats integer:=0; opp_repeats integer:=0;
@@ -119,7 +120,8 @@ begin
  order by public.padel_test_v13_cost(perm.arr,ratings,last_pairs,older_pairs,opponents),perm.arr::text
  limit 1;
  if best_ids is null then raise exception 'Ingen V13-fordeling fundet';end if;
- for version_number in 11..13 loop\n  if version_number=12 then continue;end if;
+ for version_number in 11..13 loop
+  if version_number=12 then continue;end if;
   if version_number=11 then arrangement:=v11_ids;else arrangement:=best_ids;end if;
   details:='[]'::jsonb;
   repeat_count:=0;
@@ -139,17 +141,18 @@ begin
     'repeatedPartners',(case when a=any(last_pairs) or a=any(older_pairs) then 1 else 0 end)+
                        (case when b=any(last_pairs) or b=any(older_pairs) then 1 else 0 end)));
    if version_number=11 then gap11:=gap11+abs(team_a-team_b);
-   else gap12:=gap12+abs(team_a-team_b);end if;
+   else gap13:=gap13+abs(team_a-team_b);end if;
   end loop;
   if version_number=11 then result11:=details;repeat11:=repeat_count;
-  else result12:=details;repeat12:=repeat_count;end if;
+  else result13:=details;repeat13:=repeat_count;end if;
  end loop;
  return jsonb_build_object('round',round_count,'participants',n,
   'v11',jsonb_build_object('courts',result11,'totalRatingGap',gap11,'repeatedPartners',repeat11),
-  'v12',jsonb_build_object('courts',result12,'totalRatingGap',gap12,'repeatedPartners',repeat12),
+  'v12',jsonb_build_object('courts',result13,'totalRatingGap',gap13,'repeatedPartners',repeat13),
   'note','Sammenligning af senest genererede v11-runde mod v13-alternativ; ingen data aendret');
 end;
 $$;
-revoke all on function public.padel_test_v13_cost(text[],jsonb,text[],text[],text[]) from public;\nrevoke all on function public.padel_admin_compare_v11_v13() from public;
+revoke all on function public.padel_test_v13_cost(text[],jsonb,text[],text[],text[]) from public;
+revoke all on function public.padel_admin_compare_v11_v13() from public;
 grant execute on function public.padel_admin_compare_v11_v13() to authenticated;
 commit;

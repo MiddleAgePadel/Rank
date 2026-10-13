@@ -37,7 +37,7 @@ declare
  opponents text[]:=array[]::text[]; ratings jsonb:='{}'::jsonb; names jsonb:='{}'::jsonb;
  v11_ids text[]:=array[]::text[]; best_ids text[]; candidate text[];
  best_cost bigint; cost bigint; step_cost bigint;
- n integer; round_count integer; i integer; j integer; k integer; seed integer; pass integer;
+ player_count integer; round_count integer; i integer; j integer; k integer; seed integer; pass integer;
  swap text; pair_key text; a text; b text; result11 jsonb:='[]'::jsonb;
  result13 jsonb:='[]'::jsonb; arrangement text[];
  team_a integer; team_b integer; repeat_count integer; repeat11 integer:=0; repeat13 integer:=0;
@@ -49,8 +49,8 @@ begin
  if v is null then raise exception 'Ingen realistisk test fundet'; end if;
  round_count:=jsonb_array_length(coalesce(v->'rounds','[]'::jsonb));
  if round_count<2 then raise exception 'Generer mindst to runder for at sammenligne'; end if;
- n:=jsonb_array_length(coalesce(v->'tonightIds','[]'::jsonb));
- if n not in (4,8) then raise exception 'Sammenligning kraever 4 eller 8 deltagere'; end if;
+ player_count:=jsonb_array_length(coalesce(v->'tonightIds','[]'::jsonb));
+ if player_count not in (4,8) then raise exception 'Sammenligning kraever 4 eller 8 deltagere'; end if;
  -- Brug den seneste rundes START-rating: slutrating minus +/- 50 fra denne rundes resultater.
  for p in select value from jsonb_array_elements(v->'squad') loop
   a:=p->>'id';
@@ -76,7 +76,7 @@ begin
   v11_ids:=array_append(v11_ids,m->'teamA'->>1);
   v11_ids:=array_append(v11_ids,m->'teamB'->>1);
  end loop;
- if array_length(v11_ids,1)<>n then raise exception 'Ufuldstaendige kampe i sidste runde'; end if;
+ if array_length(v11_ids,1)<>player_count then raise exception 'Ufuldstaendige kampe i sidste runde'; end if;
  -- Historik fra alle runder FOER seneste (samme tidspunkt som v11-genereringen).
  for i in 0..round_count-2 loop
   r:=v->'rounds'->i;
@@ -106,16 +106,16 @@ begin
   with recursive arrangements(arr,remaining) as (
    select array[]::text[],v11_ids
    union all
-   select a.arr||a.remaining[pos.n],
-          array_remove(a.remaining,a.remaining[pos.n])
+   select a.arr||a.remaining[pos.idx],
+          array_remove(a.remaining,a.remaining[pos.idx])
    from arrangements a
-   cross join lateral generate_subscripts(a.remaining,1) as pos(n)
-   where cardinality(a.arr)<n
+   cross join lateral generate_subscripts(a.remaining,1) as pos(idx)
+   where cardinality(a.arr)<player_count
   )
   select arr from arrangements
-  where cardinality(arr)=n
+  where cardinality(arr)=player_count
    and arr[1]<arr[3] and arr[2]<arr[4]
-   and (n=4 or (arr[5]<arr[7] and arr[6]<arr[8] and arr[1]<arr[5]))
+   and (player_count=4 or (arr[5]<arr[7] and arr[6]<arr[8] and arr[1]<arr[5]))
  ) perm
  order by public.padel_test_v13_cost(perm.arr,ratings,last_pairs,older_pairs,opponents),perm.arr::text
  limit 1;
@@ -125,7 +125,7 @@ begin
   if version_number=11 then arrangement:=v11_ids;else arrangement:=best_ids;end if;
   details:='[]'::jsonb;
   repeat_count:=0;
-  for k in 0..(n/4)-1 loop
+  for k in 0..(player_count/4)-1 loop
    i:=k*4+1;
    team_a:=coalesce((ratings->>arrangement[i])::integer,500)+coalesce((ratings->>arrangement[i+2])::integer,500);
    team_b:=coalesce((ratings->>arrangement[i+1])::integer,500)+coalesce((ratings->>arrangement[i+3])::integer,500);
@@ -146,7 +146,7 @@ begin
   if version_number=11 then result11:=details;repeat11:=repeat_count;
   else result13:=details;repeat13:=repeat_count;end if;
  end loop;
- return jsonb_build_object('round',round_count,'participants',n,
+ return jsonb_build_object('round',round_count,'participants',player_count,
   'v11',jsonb_build_object('courts',result11,'totalRatingGap',gap11,'repeatedPartners',repeat11),
   'v13',jsonb_build_object('courts',result13,'totalRatingGap',gap13,'repeatedPartners',repeat13),
   'note','Sammenligning af senest genererede v11-runde mod v13-alternativ; ingen data aendret');

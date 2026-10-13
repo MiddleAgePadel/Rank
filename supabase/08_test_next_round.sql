@@ -78,6 +78,7 @@ begin
   raise exception 'Ugyldigt resultat';
  end if;
  if p_match_id is null or (p_match_id !~ '^test-r[0-9]+-b1[01]$' and p_match_id not in ('test-b10','test-b11')) then raise exception 'Ukendt testkamp'; end if;
+ select data into v from public.padel_match_test where id='sandbox' for update;
  if v is null then raise exception 'Testturnering mangler'; end if;
  players:=v->'squad';
  for i in 0..jsonb_array_length(v->'rounds'->(jsonb_array_length(v->'rounds')-1)->'matches')-1 loop

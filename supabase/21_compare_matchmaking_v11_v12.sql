@@ -78,7 +78,7 @@ begin
  for seed in 0..n loop
   if seed=0 then trial:=v11_ids;
   else
-   trial:=array(select original_ids[((i+seed-2)%n)+1] from generate_series(1,n) i);
+   trial:=array(select original_ids[((gs.position+seed-2)%n)+1] from generate_series(1,n) as gs(position));
   end if;
   for pass in 1..100 loop
    step_cost:=public.padel_test_v12_cost(trial,original_ids,ratings,last_pairs,older_pairs,opponents);

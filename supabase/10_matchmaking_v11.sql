@@ -57,7 +57,7 @@ begin
  end loop;
  return total;
 end;
-$;
+$$;
 
 create or replace function public.padel_admin_test_next_round()
 returns jsonb language plpgsql security definer set search_path='' as $$

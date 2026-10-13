@@ -1,7 +1,7 @@
 -- SQL 22: Isoleret sammenligning af v11 og v13; kun laesning af kampdata.
 begin;
 create or replace function public.padel_test_v13_cost(p_ids text[],p_ratings jsonb,p_previous text[],p_earlier text[],p_opponents text[])
-returns bigint language plpgsql immutable set search_path='' as $
+returns bigint language plpgsql immutable set search_path='' as $v13$
 declare i integer; n integer; a text; b text; key_pair text; gap integer; max_gap integer:=0; sum_gap integer:=0; repeats integer:=0; opp_repeats integer:=0;
 begin
  n:=coalesce(array_length(p_ids,1),0);
@@ -27,7 +27,7 @@ begin
  -- derefter samlet ubalance, og til sidst modstandervariation.
  return repeats::bigint*1000000000+max_gap::bigint*1000000+sum_gap::bigint*1000+opp_repeats;
 end;
-$;
+$v13$;
 create or replace function public.padel_admin_compare_v11_v13()
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare
@@ -148,7 +148,7 @@ begin
  end loop;
  return jsonb_build_object('round',round_count,'participants',n,
   'v11',jsonb_build_object('courts',result11,'totalRatingGap',gap11,'repeatedPartners',repeat11),
-  'v12',jsonb_build_object('courts',result13,'totalRatingGap',gap13,'repeatedPartners',repeat13),
+  'v13',jsonb_build_object('courts',result13,'totalRatingGap',gap13,'repeatedPartners',repeat13),
   'note','Sammenligning af senest genererede v11-runde mod v13-alternativ; ingen data aendret');
 end;
 $$;

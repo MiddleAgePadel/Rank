@@ -2,11 +2,11 @@
 begin;
 create or replace function public.padel_test_v13_cost(p_ids text[],p_ratings jsonb,p_previous text[],p_earlier text[],p_opponents text[])
 returns bigint language plpgsql immutable set search_path='' as $v13$
-declare i integer; n integer; a text; b text; key_pair text; gap integer; max_gap integer:=0; sum_gap integer:=0; repeats integer:=0; opp_repeats integer:=0;
+declare i integer; participant_total integer; a text; b text; key_pair text; gap integer; max_gap integer:=0; sum_gap integer:=0; repeats integer:=0; opp_repeats integer:=0;
 begin
- n:=coalesce(array_length(p_ids,1),0);
- if n not in (4,8) then raise exception 'V13 kraever 4 eller 8 spillere'; end if;
- for i in 0..n/4-1 loop
+ participant_total:=coalesce(array_length(p_ids,1),0);
+ if participant_total not in (4,8) then raise exception 'V13 kraever 4 eller 8 spillere'; end if;
+ for i in 0..participant_total/4-1 loop
   a:=p_ids[4*i+1];b:=p_ids[4*i+3];key_pair:=least(a,b)||'|'||greatest(a,b);
   if key_pair=any(p_previous) or key_pair=any(p_earlier) then repeats:=repeats+1;end if;
   a:=p_ids[4*i+2];b:=p_ids[4*i+4];key_pair:=least(a,b)||'|'||greatest(a,b);

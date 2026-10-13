@@ -14,7 +14,7 @@ declare
  v_best_total integer; v_best_repeat integer; v_best_max integer; v_best_op integer;
  v_partner_repeat integer; v_op_repeat integer; v_gap1 integer; v_gap2 integer;
  v_total integer; v_max integer; v_perm integer[]; v_best_perm integer[];
- v_min_total integer:=2147483647; v_min_partner integer:=2147483647; v_min_max integer:=2147483647;
+ v_min_total integer:=2147483647; v_min_partner integer:=2147483647; v_min_max integer:=2147483647; v_quality integer; v_min_quality integer:=2147483647;
 begin
  if auth.uid() is null or not exists(select 1 from public.padel_admins where user_id=auth.uid())
  then raise exception 'Administratoradgang kraeves' using errcode='42501'; end if;
@@ -97,14 +97,15 @@ begin
     v_gap1:=abs(coalesce((v_rating_map->>v_candidate[1])::integer,500)+coalesce((v_rating_map->>v_candidate[3])::integer,500)-coalesce((v_rating_map->>v_candidate[2])::integer,500)-coalesce((v_rating_map->>v_candidate[4])::integer,500));
     v_gap2:=abs(coalesce((v_rating_map->>v_candidate[5])::integer,500)+coalesce((v_rating_map->>v_candidate[7])::integer,500)-coalesce((v_rating_map->>v_candidate[6])::integer,500)-coalesce((v_rating_map->>v_candidate[8])::integer,500));
     v_total:=v_gap1+v_gap2;v_max:=greatest(v_gap1,v_gap2);
+    v_quality:=case when v_max<=300 then 0 else 1 end;
     if pass=1 then
-     if v_partner_repeat<v_min_partner or (v_partner_repeat=v_min_partner and v_max<v_min_max) then
-      v_min_partner:=v_partner_repeat;v_min_max:=v_max;v_min_total:=v_total;
-     elsif v_partner_repeat=v_min_partner and v_max=v_min_max then
-      v_min_total:=least(v_min_total,v_total);
+     if v_partner_repeat<v_min_partner or (v_partner_repeat=v_min_partner and v_quality<v_min_quality) then
+      v_min_partner:=v_partner_repeat;v_min_quality:=v_quality;v_min_total:=v_total;v_min_max:=v_max;
+     elsif v_partner_repeat=v_min_partner and v_quality=v_min_quality then
+      v_min_total:=least(v_min_total,v_total);v_min_max:=least(v_min_max,v_max);
      end if;
     else
-     if v_partner_repeat=v_min_partner and v_max=v_min_max and v_total<=v_min_total+300 then
+     if v_partner_repeat=v_min_partner and v_quality=v_min_quality and v_total<=v_min_total+300 then
       if v_best_perm is null or v_op_repeat<v_best_op or (v_op_repeat=v_best_op and v_total<v_best_total) then
        v_best_perm:=v_perm;v_best_op:=v_op_repeat;v_best_total:=v_total;
       end if;
@@ -113,7 +114,8 @@ begin
    end loop;
   end loop;
   if v_best_perm is null then raise exception 'V17 kunne ikke finde gyldig kampfordeling'; end if;
-  v_ids:=array(select v_ids[k] from unnest(v_best_perm) k);
+  v_candidate:=v_ids;
+  v_ids:=array(select v_candidate[k] from unnest(v_best_perm) k);
  else
   -- Four-player evenings retain the already proven v11 fallback.
   for pass in 1..100 loop

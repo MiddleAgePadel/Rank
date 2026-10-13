@@ -20,7 +20,7 @@ $$;
 
 create or replace function public.padel_test_v11_cost(
  p_ids text[],p_original text[],p_ratings jsonb,p_previous text[],p_earlier text[]
-) returns bigint language plpgsql immutable set search_path='' as $
+) returns bigint language plpgsql immutable set search_path='' as $$
 declare n integer; i integer; j integer; a text; b text; pair_key text;
  ra integer; rb integer; rc integer; rd integer; total bigint:=0;
 begin
